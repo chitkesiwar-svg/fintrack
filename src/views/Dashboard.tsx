@@ -407,6 +407,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
     setShowAddForm(true);
   };
 
+  const deleteEmi = (id: string) => {
+    setEmis(prev => prev.filter(e => e.id !== id));
+  };
+
+  const deleteSubscription = (id: string) => {
+    setSubscriptions(prev => prev.filter(s => s.id !== id));
+  };
+
   return (
     <div className="space-y-8 pb-12">
       {/* Top Summary Section */}
@@ -674,7 +682,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   <input 
                     type="range" 
                     min="0" 
-                    max={monthlyIncome - totalMonthlySubCost - totalTransactionExpenses} 
+                    max={Math.max(100000, monthlyIncome)} 
                     step="500"
                     value={savingsTarget}
                     onChange={(e) => setSavingsTarget(Number(e.target.value))}
@@ -839,14 +847,23 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       <div className="space-y-3">
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Active EMIs</p>
                         {emis.map(emi => (
-                          <div key={emi.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
+                          <div key={emi.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl group/emi">
                             <div className="flex items-center gap-3">
-                              <button 
-                                onClick={() => handleEditEmi(emi)}
-                                className="w-10 h-10 bg-white rounded-xl flex items-center justify-center font-bold text-rose-600 shadow-sm hover:bg-rose-50 transition-colors group"
-                              >
-                                <CreditCard className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                              </button>
+                              <div className="flex gap-2">
+                                <button 
+                                  onClick={() => handleEditEmi(emi)}
+                                  className="w-10 h-10 bg-white rounded-xl flex items-center justify-center font-bold text-rose-600 shadow-sm hover:bg-rose-50 transition-colors group"
+                                >
+                                  <CreditCard className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                                </button>
+                                <button 
+                                  onClick={() => deleteEmi(emi.id)}
+                                  className="w-10 h-10 bg-white rounded-xl flex items-center justify-center font-bold text-rose-500 shadow-sm hover:bg-rose-50 transition-colors group opacity-0 group-hover/emi:opacity-100"
+                                  title="Delete EMI"
+                                >
+                                  <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                </button>
+                              </div>
                               <div>
                                 <p className="font-bold text-slate-800 text-sm">{emi.name}</p>
                                 <p className="text-[10px] text-slate-400">{emi.remainingTenure}/{emi.totalTenure} months left</p>
@@ -864,14 +881,23 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     <div className="space-y-3 pt-4">
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Subscriptions</p>
                       {subscriptions.map(sub => (
-                        <div key={sub.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
+                        <div key={sub.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl group/sub">
                           <div className="flex items-center gap-3">
-                            <button 
-                              onClick={() => handleEditSub(sub)}
-                              className="w-10 h-10 bg-white rounded-xl flex items-center justify-center font-bold text-indigo-600 shadow-sm hover:bg-indigo-50 transition-colors group"
-                            >
-                              <span className="group-hover:scale-110 transition-transform">{sub.name[0]}</span>
-                            </button>
+                            <div className="flex gap-2">
+                              <button 
+                                onClick={() => handleEditSub(sub)}
+                                className="w-10 h-10 bg-white rounded-xl flex items-center justify-center font-bold text-indigo-600 shadow-sm hover:bg-indigo-50 transition-colors group"
+                              >
+                                <span className="group-hover:scale-110 transition-transform">{sub.name[0]}</span>
+                              </button>
+                              <button 
+                                onClick={() => deleteSubscription(sub.id)}
+                                className="w-10 h-10 bg-white rounded-xl flex items-center justify-center font-bold text-rose-500 shadow-sm hover:bg-rose-50 transition-colors group opacity-0 group-hover/sub:opacity-100"
+                                title="Delete Subscription"
+                              >
+                                <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                              </button>
+                            </div>
                             <div>
                               <p className="font-bold text-slate-800 text-sm">{sub.name}</p>
                               <p className="text-xs text-slate-400">₹{sub.amount}/mo</p>
