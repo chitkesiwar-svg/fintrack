@@ -120,14 +120,14 @@ export const AddExpense: React.FC<AddExpenseProps> = ({ categories, onAddExpense
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-[40px] border border-slate-100 shadow-2xl overflow-hidden"
+        className="bg-white rounded-[24px] sm:rounded-[40px] border border-slate-100 shadow-2xl overflow-hidden"
       >
-        <div className="p-8 bg-indigo-600 text-white">
+        <div className="p-6 sm:p-8 bg-indigo-600 text-white">
           <h2 className="text-2xl font-bold">Add New Expense</h2>
           <p className="text-indigo-100 text-sm">Keep your spending tracked and organized</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-10 space-y-8">
+        <form onSubmit={handleSubmit} className="p-6 sm:p-10 space-y-6 sm:space-y-8">
           {/* Amount Input */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -143,13 +143,13 @@ export const AddExpense: React.FC<AddExpenseProps> = ({ categories, onAddExpense
               )}
             </div>
             <div className="relative">
-              <span className="absolute left-6 top-1/2 -translate-y-1/2 text-3xl font-bold text-slate-300">₹</span>
+              <span className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl sm:text-3xl font-bold text-slate-300">₹</span>
               <input 
                 type="number" 
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
-                className="w-full bg-slate-50 border-none rounded-3xl pl-12 pr-6 py-6 text-4xl font-bold text-slate-800 focus:ring-4 focus:ring-indigo-50 transition-all outline-none placeholder:text-slate-200"
+                className="w-full bg-slate-50 border-none rounded-3xl pl-12 pr-6 py-4 sm:py-6 text-2xl sm:text-4xl font-bold text-slate-800 focus:ring-4 focus:ring-indigo-50 transition-all outline-none placeholder:text-slate-200"
                 required
               />
             </div>

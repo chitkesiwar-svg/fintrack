@@ -110,7 +110,7 @@ export const Categories: React.FC<CategoriesProps> = ({ categories, setCategorie
           const percentage = stat.budget > 0 ? Math.min((stat.spent / stat.budget) * 100, 100) : 0;
           
           return (
-            <div key={stat.name} className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm hover:shadow-md transition-all group relative">
+            <div key={stat.name} className="bg-white p-6 sm:p-8 rounded-[32px] sm:rounded-[40px] border border-slate-100 shadow-sm hover:shadow-md transition-all group relative">
               <div className="flex items-center justify-between mb-6">
                 <div 
                   className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg transition-all group-hover:scale-110"
@@ -234,7 +234,7 @@ export const Categories: React.FC<CategoriesProps> = ({ categories, setCategorie
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl border border-slate-100"
+              className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-2xl border border-slate-100"
             >
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold text-slate-800">Add New Category</h3>
@@ -276,7 +276,7 @@ export const Categories: React.FC<CategoriesProps> = ({ categories, setCategorie
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl border border-slate-100"
+              className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-2xl border border-slate-100"
             >
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold text-slate-800">Set Budget for {selectedCategory}</h3>
@@ -323,7 +323,7 @@ export const Categories: React.FC<CategoriesProps> = ({ categories, setCategorie
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-3xl p-8 w-full max-w-2xl shadow-2xl border border-slate-100 max-h-[80vh] flex flex-col"
+              className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-2xl shadow-2xl border border-slate-100 max-h-[80vh] flex flex-col"
             >
               <div className="flex items-center justify-between mb-6">
                 <div>
@@ -375,7 +375,7 @@ export const Categories: React.FC<CategoriesProps> = ({ categories, setCategorie
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative bg-white rounded-[32px] shadow-2xl w-full max-w-sm overflow-hidden p-8 text-center"
+              className="relative bg-white rounded-[32px] shadow-2xl w-full max-w-sm overflow-hidden p-6 sm:p-8 text-center"
             >
               <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <Trash2 className="w-8 h-8 text-rose-500" />

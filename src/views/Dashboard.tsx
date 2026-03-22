@@ -32,7 +32,7 @@ const IncomeModal: React.FC<{
   const [newSourceAmount, setNewSourceAmount] = useState('');
   const [editingSourceId, setEditingSourceId] = useState<string | null>(null);
 
-  const handleAddIncomeSource = (e: React.FormEvent) => {
+  const handleAddIncomeSource = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newSourceName && newSourceAmount && !isNaN(Number(newSourceAmount))) {
       const newSource: IncomeSource = {
@@ -40,23 +40,31 @@ const IncomeModal: React.FC<{
         name: newSourceName,
         amount: Number(newSourceAmount)
       };
+      await fetch('/api/income', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newSource)
+      });
       setIncomeSources([...incomeSources, newSource]);
       setNewSourceName('');
       setNewSourceAmount('');
     }
   };
 
-  const updateIncomeSource = (id: string, name: string, amount: number) => {
+  const updateIncomeSource = async (id: string, name: string, amount: number) => {
+    const updated = { id, name, amount };
+    await fetch('/api/income', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updated)
+    });
     setIncomeSources(prev => prev.map(s => 
-      s.id === id ? { ...s, name, amount } : s
+      s.id === id ? updated : s
     ));
   };
 
-  const deleteIncomeSource = (id: string) => {
+  const deleteIncomeSource = async (id: string) => {
     if (incomeSources.length <= 1) {
       alert("You must have at least one income source.");
       return;
     }
+    await fetch(`/api/income/${id}`, { method: 'DELETE' });
     setIncomeSources(prev => prev.filter(s => s.id !== id));
   };
 
@@ -181,9 +189,18 @@ export const Dashboard: React.FC<DashboardProps> = ({
   incomeSources,
   setIncomeSources
 }) => {
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>(DUMMY_SUBSCRIPTIONS);
-  const [emis, setEmis] = useState<EMI[]>(DUMMY_EMIS);
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [emis, setEmis] = useState<EMI[]>([]);
   const [family, setFamily] = useState<FamilyMember[]>(DUMMY_FAMILY);
+  const [savingsTarget, setSavingsTarget] = useState(45000);
+
+  React.useEffect(() => {
+    fetch('/api/emis').then(r => r.json()).then(data => { if (Array.isArray(data)) setEmis(data); }).catch(e => console.error(e));
+    fetch('/api/subscriptions').then(r => r.json()).then(data => { if (Array.isArray(data)) setSubscriptions(data); }).catch(e => console.error(e));
+    fetch('/api/settings').then(r => r.json()).then(data => {
+      if (data && data.savingsTarget) setSavingsTarget(Number(data.savingsTarget));
+    }).catch(e => console.error(e));
+  }, []);
   
   // Modal States
   const [isManagingIncome, setIsManagingIncome] = useState(false);
@@ -200,7 +217,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
   
   // Savings/Fixed Expenses State
-  const [savingsTarget, setSavingsTarget] = useState(45000);
   
   // New Sub/EMI Form State
   const [newSubName, setNewSubName] = useState('');
@@ -221,7 +237,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const safeToSpendLimit = monthlyIncome - totalMonthlySubCost - totalMonthlyEmiCost - savingsTarget;
   const remainingToSpend = safeToSpendLimit - totalTransactionExpenses;
 
-  const deleteTransaction = (id: string) => {
+  const deleteTransaction = async (id: string) => {
+    await fetch(`/api/transactions/${id}`, { method: 'DELETE' });
     setTransactions(prev => prev.filter(t => t.id !== id));
     setTransactionToDelete(null);
   };
@@ -331,29 +348,36 @@ export const Dashboard: React.FC<DashboardProps> = ({
     }
   };
 
-  const toggleSubscription = (id: string) => {
-    setSubscriptions(prev => prev.map(s => 
-      s.id === id ? { ...s, status: s.status === 'Active' ? 'Paused' : 'Active' } : s
-    ));
+  const toggleSubscription = async (id: string) => {
+    const sub = subscriptions.find(s => s.id === id);
+    if (!sub) return;
+    const nextStatus = sub.status === 'Active' ? 'Paused' : 'Active';
+    const updated = { ...sub, status: nextStatus };
+    await fetch('/api/subscriptions', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updated)
+    });
+    setSubscriptions(prev => prev.map(s => s.id === id ? updated : s));
   };
 
-  const handleAddSubOrEmi = (e: React.FormEvent) => {
+  const handleAddSubOrEmi = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSubName || !newSubAmount) return;
 
     if (editingItemId) {
       if (isEmi) {
-        setEmis(prev => prev.map(e => 
-          e.id === editingItemId 
-            ? { ...e, name: newSubName, amount: Number(newSubAmount), totalTenure: Number(emiTenure) } 
-            : e
-        ));
+        const existing = emis.find(e => e.id === editingItemId);
+        if (existing) {
+          const updated = { ...existing, name: newSubName, amount: Number(newSubAmount), totalTenure: Number(emiTenure) };
+          await fetch('/api/emis', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updated) });
+          setEmis(prev => prev.map(e => e.id === editingItemId ? updated : e));
+        }
       } else {
-        setSubscriptions(prev => prev.map(s => 
-          s.id === editingItemId 
-            ? { ...s, name: newSubName, amount: Number(newSubAmount) } 
-            : s
-        ));
+        const existing = subscriptions.find(s => s.id === editingItemId);
+        if (existing) {
+          const updated = { ...existing, name: newSubName, amount: Number(newSubAmount) };
+          await fetch('/api/subscriptions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updated) });
+          setSubscriptions(prev => prev.map(s => s.id === editingItemId ? updated : s));
+        }
       }
     } else {
       if (isEmi) {
@@ -366,6 +390,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           totalTenure: Number(emiTenure),
           remainingTenure: Number(emiTenure)
         };
+        await fetch('/api/emis', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newEmi) });
         setEmis([...emis, newEmi]);
       } else {
         const newSub: Subscription = {
@@ -380,6 +405,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           status: 'Active',
           paymentMethod: 'Credit Card'
         };
+        await fetch('/api/subscriptions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newSub) });
         setSubscriptions([...subscriptions, newSub]);
       }
     }
@@ -407,11 +433,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
     setShowAddForm(true);
   };
 
-  const deleteEmi = (id: string) => {
+  const deleteEmi = async (id: string) => {
+    await fetch(`/api/emis/${id}`, { method: 'DELETE' });
     setEmis(prev => prev.filter(e => e.id !== id));
   };
 
-  const deleteSubscription = (id: string) => {
+  const deleteSubscription = async (id: string) => {
+    await fetch(`/api/subscriptions/${id}`, { method: 'DELETE' });
     setSubscriptions(prev => prev.filter(s => s.id !== id));
   };
 
@@ -677,7 +705,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <div className="space-y-4">
                   <div className="flex items-center justify-between text-sm font-bold">
                     <span className="text-slate-500">Savings Target</span>
-                    <span className="text-emerald-600">₹{savingsTarget.toLocaleString()}</span>
+                    <div className="flex items-center gap-1 group/target">
+                      <span className="text-emerald-600">₹</span>
+                      <input 
+                        type="number"
+                        value={savingsTarget}
+                        onChange={(e) => setSavingsTarget(Number(e.target.value))}
+                        className="w-24 text-right bg-transparent border-b-2 border-transparent focus:border-emerald-200 hover:border-emerald-100 outline-none text-emerald-600 font-bold transition-colors cursor-pointer focus:cursor-text"
+                      />
+                      <Edit2 className="w-3 h-3 text-emerald-300 opacity-0 group-hover/target:opacity-100 transition-opacity" />
+                    </div>
                   </div>
                   <input 
                     type="range" 
@@ -714,7 +751,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 </div>
 
                 <button 
-                  onClick={() => setIsManagingSafeToSpend(false)}
+                  onClick={async () => {
+                    await fetch('/api/settings', {
+                      method: 'POST', headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ key: 'savingsTarget', value: savingsTarget.toString() })
+                    });
+                    setIsManagingSafeToSpend(false);
+                  }}
                   className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
                 >
                   Save Adjustment

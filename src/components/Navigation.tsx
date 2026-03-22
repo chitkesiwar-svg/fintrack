@@ -12,6 +12,8 @@ import { motion, AnimatePresence } from 'motion/react';
 interface SidebarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  isMobileMenuOpen?: boolean;
+  setIsMobileMenuOpen?: (open: boolean) => void;
 }
 
 const sidebarItems = [
@@ -24,21 +26,45 @@ const sidebarItems = [
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobileMenuOpen }) => {
   return (
-    <div className="h-full flex flex-col bg-white border-r border-slate-100 w-64">
-      <div className="p-6 flex items-center gap-3">
-        <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
-          <Sparkles className="text-white w-6 h-6" />
+    <>
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setIsMobileMenuOpen && setIsMobileMenuOpen(false)}
+            className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm md:hidden"
+          />
+        )}
+      </AnimatePresence>
+      <div className={cn(
+        "fixed md:static inset-y-0 left-0 z-50 h-full flex flex-col bg-white border-r border-slate-100 w-64 transform transition-transform duration-300 md:translate-x-0",
+        isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+      )}>
+        <div className="p-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
+              <Sparkles className="text-white w-6 h-6" />
+            </div>
+            <span className="font-bold text-xl tracking-tight text-slate-800">FinTrack</span>
+          </div>
+          <button 
+            className="md:hidden p-2 text-slate-400 hover:bg-slate-50 rounded-lg"
+            onClick={() => setIsMobileMenuOpen && setIsMobileMenuOpen(false)}
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
-        <span className="font-bold text-xl tracking-tight text-slate-800">FinTrack</span>
-      </div>
 
       <nav className="flex-1 px-4 space-y-1 overflow-y-auto py-4">
         {sidebarItems.map((item) => (
           <button
             key={item.id}
-            onClick={() => setActiveTab(item.id)}
+            onClick={() => {
+              setActiveTab(item.id);
+              if (setIsMobileMenuOpen) setIsMobileMenuOpen(false);
+            }}
             className={cn(
               "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group",
               activeTab === item.id 
@@ -68,19 +94,31 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
         </button>
       </div>
     </div>
+    </>
   );
 };
 
-export const Header: React.FC<{ activeTab: string }> = ({ activeTab }) => {
+export const Header: React.FC<{ activeTab: string, onMenuClick?: () => void }> = ({ activeTab, onMenuClick }) => {
   return (
-    <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center justify-between px-8 sticky top-0 z-30">
-      <div className="flex flex-col">
-        <h1 className="text-xl font-semibold text-slate-800 capitalize">
-          {activeTab === 'budget-categories' ? 'Budget & Categories' : activeTab.replace('-', ' ')}
-        </h1>
-        {activeTab === 'home' && (
-          <p className="text-xs text-slate-400">Hi Prashansa 👋 Here’s your financial summary</p>
-        )}
+    <header className="h-full max-h-20 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center justify-between px-4 md:px-8 py-4 sticky top-0 z-30">
+      <div className="flex items-center gap-3">
+        <button 
+          onClick={onMenuClick}
+          className="md:hidden p-2 text-slate-500 hover:bg-slate-50 rounded-xl transition-colors"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+        <div className="flex flex-col">
+          <h1 className="text-xl font-semibold text-slate-800 capitalize hidden sm:block">
+            {activeTab === 'budget-categories' ? 'Budget & Categories' : activeTab.replace('-', ' ')}
+          </h1>
+          <h1 className="text-lg font-bold text-slate-800 capitalize sm:hidden truncate max-w-[150px]">
+            {activeTab === 'budget-categories' ? 'Budget' : activeTab.replace('-', ' ')}
+          </h1>
+          {activeTab === 'home' && (
+            <p className="text-xs text-slate-400 hidden sm:block">Hi Prashansa 👋 Here’s your financial summary</p>
+          )}
+        </div>
       </div>
 
       <div className="flex items-center gap-6">
@@ -93,21 +131,21 @@ export const Header: React.FC<{ activeTab: string }> = ({ activeTab }) => {
           />
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3">
           <button className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-all relative">
             <Bell className="w-5 h-5" />
             <span className="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
           </button>
 
-          <div className="flex items-center gap-3 pl-4 border-l border-slate-100">
+          <div className="flex items-center gap-3 pl-2 md:pl-4 border-l border-slate-100">
             <div className="text-right hidden sm:block">
               <p className="text-sm font-semibold text-slate-800 leading-none">Prashansa</p>
-              <p className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mt-1">Premium Plan</p>
+              <p className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mt-1">Premium</p>
             </div>
             <img 
               src="https://picsum.photos/seed/prashansa/100/100" 
               alt="Profile" 
-              className="w-10 h-10 rounded-full border-2 border-indigo-100 p-0.5"
+              className="w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-indigo-100 p-0.5"
             />
           </div>
         </div>

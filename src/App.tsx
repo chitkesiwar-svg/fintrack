@@ -19,6 +19,7 @@ export default function App() {
   const [categories, setCategories] = useState<string[]>(CATEGORIES);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [incomeSources, setIncomeSources] = useState<IncomeSource[]>([]);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -96,13 +97,13 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+    <div className="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden relative w-full">
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />
       
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <Header activeTab={activeTab} />
+      <main className="flex-1 flex flex-col overflow-hidden w-full relative">
+        <Header activeTab={activeTab} onMenuClick={() => setIsMobileMenuOpen(true)} />
         
-        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}

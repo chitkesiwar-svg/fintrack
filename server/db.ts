@@ -19,6 +19,34 @@ db.exec(`
     name TEXT NOT NULL,
     amount REAL NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS emis (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    amount REAL NOT NULL,
+    nextPaymentDate TEXT NOT NULL,
+    status TEXT NOT NULL,
+    totalTenure INTEGER NOT NULL,
+    remainingTenure INTEGER NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS subscriptions (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    category TEXT NOT NULL,
+    bankDetails TEXT NOT NULL,
+    amount REAL NOT NULL,
+    lastPayment TEXT NOT NULL,
+    billingCycle TEXT NOT NULL,
+    nextBillDate TEXT NOT NULL,
+    status TEXT NOT NULL,
+    paymentMethod TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+  );
 `);
 
 export default db;

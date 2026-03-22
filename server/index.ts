@@ -40,6 +40,16 @@ app.post('/api/transactions', (req, res) => {
   }
 });
 
+app.delete('/api/transactions/:id', (req, res) => {
+  try {
+    const stmt = db.prepare('DELETE FROM transactions WHERE id = ?');
+    stmt.run(req.params.id);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // Income Sources
 app.get('/api/income', (req, res) => {
   try {
@@ -63,6 +73,110 @@ app.post('/api/income', (req, res) => {
     res.status(201).json({ success: true });
   } catch (error) {
     console.error('Error adding income source:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.delete('/api/income/:id', (req, res) => {
+  try {
+    const stmt = db.prepare('DELETE FROM income_sources WHERE id = ?');
+    stmt.run(req.params.id);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// EMIs
+app.get('/api/emis', (req, res) => {
+  try {
+    const stmt = db.prepare('SELECT * FROM emis');
+    res.json(stmt.all());
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.post('/api/emis', (req, res) => {
+  try {
+    const { id, name, amount, nextPaymentDate, status, totalTenure, remainingTenure } = req.body;
+    const stmt = db.prepare(`
+      INSERT OR REPLACE INTO emis (id, name, amount, nextPaymentDate, status, totalTenure, remainingTenure)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `);
+    stmt.run(id, name, amount, nextPaymentDate, status, totalTenure, remainingTenure);
+    res.status(201).json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.delete('/api/emis/:id', (req, res) => {
+  try {
+    const stmt = db.prepare('DELETE FROM emis WHERE id = ?');
+    stmt.run(req.params.id);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Subscriptions
+app.get('/api/subscriptions', (req, res) => {
+  try {
+    const stmt = db.prepare('SELECT * FROM subscriptions');
+    res.json(stmt.all());
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.post('/api/subscriptions', (req, res) => {
+  try {
+    const { id, name, category, bankDetails, amount, lastPayment, billingCycle, nextBillDate, status, paymentMethod } = req.body;
+    const stmt = db.prepare(`
+      INSERT OR REPLACE INTO subscriptions (id, name, category, bankDetails, amount, lastPayment, billingCycle, nextBillDate, status, paymentMethod)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    stmt.run(id, name, category || 'Subscriptions', bankDetails || '', amount, lastPayment || '', billingCycle || 'Monthly', nextBillDate || '', status || 'Active', paymentMethod || 'Credit Card');
+    res.status(201).json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.delete('/api/subscriptions/:id', (req, res) => {
+  try {
+    const stmt = db.prepare('DELETE FROM subscriptions WHERE id = ?');
+    stmt.run(req.params.id);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Settings
+app.get('/api/settings', (req, res) => {
+  try {
+    const stmt = db.prepare('SELECT * FROM settings');
+    const settings = stmt.all();
+    const settingsObj = (settings as any[]).reduce((acc: any, curr: any) => {
+      acc[curr.key] = curr.value;
+      return acc;
+    }, {});
+    res.json(settingsObj);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.post('/api/settings', (req, res) => {
+  try {
+    const { key, value } = req.body;
+    const stmt = db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)');
+    stmt.run(key, value.toString());
+    res.status(200).json({ success: true });
+  } catch (error) {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });

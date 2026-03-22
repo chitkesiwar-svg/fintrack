@@ -58,7 +58,7 @@ export const Analytics: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
-          <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm">
+          <div className="bg-white p-6 sm:p-8 rounded-[32px] sm:rounded-[40px] border border-slate-100 shadow-sm">
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h3 className="font-bold text-slate-800">Spending Heatmap</h3>
@@ -94,7 +94,7 @@ export const Analytics: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm">
+            <div className="bg-white p-6 sm:p-8 rounded-[32px] sm:rounded-[40px] border border-slate-100 shadow-sm">
               <h3 className="font-bold text-slate-800 mb-6">Top Merchants</h3>
               <div className="space-y-6">
                 {[
@@ -118,7 +118,7 @@ export const Analytics: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm">
+            <div className="bg-white p-6 sm:p-8 rounded-[32px] sm:rounded-[40px] border border-slate-100 shadow-sm">
               <h3 className="font-bold text-slate-800 mb-6">Category Comparison</h3>
               <div className="h-[200px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -139,7 +139,7 @@ export const Analytics: React.FC = () => {
         </div>
 
         <div className="space-y-8">
-          <div className="bg-indigo-600 p-8 rounded-[40px] text-white shadow-xl shadow-indigo-100">
+          <div className="bg-indigo-600 p-6 sm:p-8 rounded-[32px] sm:rounded-[40px] text-white shadow-xl shadow-indigo-100">
             <div className="flex items-center justify-between mb-8">
               <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
                 <Activity className="w-6 h-6" />
@@ -155,7 +155,7 @@ export const Analytics: React.FC = () => {
             </button>
           </div>
 
-          <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm">
+          <div className="bg-white p-6 sm:p-8 rounded-[32px] sm:rounded-[40px] border border-slate-100 shadow-sm">
             <h3 className="font-bold text-slate-800 mb-6">Monthly Growth</h3>
             <div className="space-y-6">
               {[
