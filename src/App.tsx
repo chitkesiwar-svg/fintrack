@@ -72,7 +72,7 @@ export default function App() {
           />
         );
       case 'analytics':
-        return <Analytics />;
+        return <Analytics transactions={transactions} />;
       case 'add-expense':
         return <AddExpense categories={categories} onAddExpense={addTransaction} onDone={() => setActiveTab('home')} />;
       case 'budget-categories':

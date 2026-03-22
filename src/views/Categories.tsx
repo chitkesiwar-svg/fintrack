@@ -105,15 +105,15 @@ export const Categories: React.FC<CategoriesProps> = ({ categories, setCategorie
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
         {categoryStats.map((stat) => {
           const percentage = stat.budget > 0 ? Math.min((stat.spent / stat.budget) * 100, 100) : 0;
           
           return (
-            <div key={stat.name} className="bg-white p-6 sm:p-8 rounded-[32px] sm:rounded-[40px] border border-slate-100 shadow-sm hover:shadow-md transition-all group relative">
-              <div className="flex items-center justify-between mb-6">
+            <div key={stat.name} className="bg-white p-4 sm:p-6 lg:p-8 rounded-[24px] sm:rounded-[32px] lg:rounded-[40px] border border-slate-100 shadow-sm hover:shadow-md transition-all group relative flex flex-col">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
                 <div 
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg transition-all group-hover:scale-110"
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex-shrink-0 flex items-center justify-center shadow-lg transition-all group-hover:scale-110"
                   style={{ backgroundColor: categoryColors[stat.name] || '#64748b' }}
                 >
                   {getCategoryIcon(stat.name)}
@@ -178,14 +178,14 @@ export const Categories: React.FC<CategoriesProps> = ({ categories, setCategorie
                   </AnimatePresence>
                 </div>
               </div>
-              <h3 className="font-bold text-slate-800 mb-0.5">{stat.name}</h3>
-              <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">{stat.count} Transactions</p>
-              <div className="mt-6 space-y-4">
+              <h3 className="font-bold text-slate-800 mb-0.5 text-sm sm:text-base truncate">{stat.name}</h3>
+              <p className="text-[9px] sm:text-[10px] text-slate-400 font-medium uppercase tracking-wider truncate">{stat.count} Transactions</p>
+              <div className="mt-4 sm:mt-6 space-y-3 sm:space-y-4 flex-1 flex flex-col justify-end">
                 {stat.budget > 0 ? (
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between text-[11px]">
-                      <span className="text-slate-500 font-medium">Spent: <span className="text-slate-800 font-bold">₹{stat.spent.toLocaleString()}</span></span>
-                      <span className="text-slate-500 font-medium">Limit: <span className="text-slate-800 font-bold">₹{stat.budget.toLocaleString()}</span></span>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[10px] sm:text-[11px] gap-1 sm:gap-0">
+                      <span className="text-slate-500 font-medium truncate">Spent: <span className="text-slate-800 font-bold">₹{stat.spent.toLocaleString()}</span></span>
+                      <span className="text-slate-500 font-medium truncate">Limit: <span className="text-slate-800 font-bold">₹{stat.budget.toLocaleString()}</span></span>
                     </div>
                     <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
                       <motion.div 

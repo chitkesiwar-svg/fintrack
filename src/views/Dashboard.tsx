@@ -1000,7 +1000,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <thead>
                 <tr className="bg-slate-50/50 text-[10px] uppercase tracking-widest font-bold text-slate-400">
                   <th className="px-6 py-4">Merchant</th>
-                  <th className="px-6 py-4">Category</th>
                   <th className="px-6 py-4">Date</th>
                   <th className="px-6 py-4">Amount</th>
                   <th className="px-6 py-4"></th>
@@ -1026,9 +1025,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">{t.category}</p>
                         </div>
                       </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-xs font-medium text-slate-500">{t.category}</span>
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-400">{t.date}</td>
                     <td className="px-6 py-4 text-sm font-bold text-slate-800">₹{t.amount.toLocaleString()}</td>
