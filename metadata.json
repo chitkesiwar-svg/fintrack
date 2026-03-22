@@ -1,0 +1,8 @@
+{
+  "name": "FinTrack - Smart Expense & Budget Manager",
+  "description": "An AI-powered personal finance platform for tracking expenses, managing budgets, and analyzing spending with smart receipt scanning.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
