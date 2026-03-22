@@ -14,6 +14,7 @@ interface SidebarProps {
   setActiveTab: (tab: string) => void;
   isMobileMenuOpen?: boolean;
   setIsMobileMenuOpen?: (open: boolean) => void;
+  onLogout?: () => void;
 }
 
 const sidebarItems = [
@@ -26,7 +27,7 @@ const sidebarItems = [
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobileMenuOpen }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobileMenuOpen, onLogout }) => {
   return (
     <>
       <AnimatePresence>
@@ -88,7 +89,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMob
       </nav>
 
       <div className="p-4 mt-auto border-t border-slate-50">
-        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-rose-50 hover:text-rose-600 transition-all duration-200">
+        <button 
+          onClick={onLogout}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-rose-50 hover:text-rose-600 transition-all duration-200"
+        >
           <LogOut className="w-5 h-5" />
           <span className="text-sm font-medium">Logout</span>
         </button>
@@ -98,7 +102,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMob
   );
 };
 
-export const Header: React.FC<{ activeTab: string, onMenuClick?: () => void }> = ({ activeTab, onMenuClick }) => {
+export const Header: React.FC<{ activeTab: string, onMenuClick?: () => void, user?: any }> = ({ activeTab, onMenuClick, user }) => {
   return (
     <header className="h-full max-h-20 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center justify-between px-4 md:px-8 py-4 sticky top-0 z-30">
       <div className="flex items-center gap-3">
@@ -116,7 +120,7 @@ export const Header: React.FC<{ activeTab: string, onMenuClick?: () => void }> =
             {activeTab === 'budget-categories' ? 'Budget' : activeTab.replace('-', ' ')}
           </h1>
           {activeTab === 'home' && (
-            <p className="text-xs text-slate-400 hidden sm:block">Hi Prashansa 👋 Here’s your financial summary</p>
+            <p className="text-xs text-slate-400 hidden sm:block">Hi {user?.name || 'User'} 👋 Here’s your financial summary</p>
           )}
         </div>
       </div>
@@ -139,11 +143,11 @@ export const Header: React.FC<{ activeTab: string, onMenuClick?: () => void }> =
 
           <div className="flex items-center gap-3 pl-2 md:pl-4 border-l border-slate-100">
             <div className="text-right hidden sm:block">
-              <p className="text-sm font-semibold text-slate-800 leading-none">Prashansa</p>
-              <p className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mt-1">Premium</p>
+              <p className="text-sm font-semibold text-slate-800 leading-none">{user?.name || 'User'}</p>
+              <p className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mt-1">{user?.role || 'Member'}</p>
             </div>
             <img 
-              src="https://picsum.photos/seed/prashansa/100/100" 
+              src={user?.avatar || "https://ui-avatars.com/api/?name=User&background=random&color=fff"} 
               alt="Profile" 
               className="w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-indigo-100 p-0.5"
             />

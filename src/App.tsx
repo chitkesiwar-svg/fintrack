@@ -8,13 +8,20 @@ import { SavingsGoals } from './views/SavingsGoals';
 import { Invoices } from './views/Invoices';
 import { Settings } from './views/Settings';
 import { LandingPage } from './views/LandingPage';
+import { Onboarding } from './views/Onboarding';
 import { SpendWiseAI } from './components/SpendWiseAI';
 import { motion, AnimatePresence } from 'motion/react';
 import { DUMMY_TRANSACTIONS, CATEGORIES } from './constants';
 import { Transaction, IncomeSource } from './types';
 
 export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState<any>(() => {
+    const saved = localStorage.getItem('fintrack_user');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [isOnboarding, setIsOnboarding] = useState(false);
+  const isLoggedIn = !!user;
+
   const [activeTab, setActiveTab] = useState('home');
   const [categories, setCategories] = useState<string[]>(CATEGORIES);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -27,7 +34,7 @@ export default function App() {
         .then(res => res.json())
         .then(data => setTransactions(data))
         .catch(err => console.error('Failed to load transactions:', err));
-        
+
       fetch('/api/income')
         .then(res => res.json())
         .then(data => setIncomeSources(data))
@@ -35,13 +42,66 @@ export default function App() {
     }
   }, [isLoggedIn]);
 
+  useEffect(() => {
+    if (isLoggedIn && !isOnboarding) {
+      if (!sessionStorage.getItem('fintrack_welcomed')) {
+        const playGreeting = () => {
+          const name = user?.name || (user?.email ? user.email.split('@')[0] : 'User');
+          if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(`Hello ${name}. Welcome to FinTrack.`);
+
+            // Calmer, smoother, polite settings
+            utterance.rate = 0.85; // Slightly slower for a calmer tone
+            utterance.pitch = 1.05; // Slightly higher pitch for a polite feminine baseline
+            utterance.volume = 0.8; // Softer volume
+
+            const setBestVoice = () => {
+              const voices = window.speechSynthesis.getVoices();
+              // Attempt to find a premium female voice specific to Mac/Chrome
+              const preferredVoices = ['Google UK English Female', 'Samantha', 'Victoria', 'Karen', 'Moira'];
+              let selectedVoice = null;
+
+              for (const pref of preferredVoices) {
+                selectedVoice = voices.find(v => v.name.includes(pref));
+                if (selectedVoice) break;
+              }
+
+              // Fallback to any generic female voice
+              if (!selectedVoice) {
+                selectedVoice = voices.find(v => v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('woman'));
+              }
+
+              if (selectedVoice) {
+                utterance.voice = selectedVoice;
+              }
+
+              window.speechSynthesis.speak(utterance);
+            };
+
+            // Browsers load voices asynchronously, wait if necessary
+            if (window.speechSynthesis.getVoices().length > 0) {
+              setBestVoice();
+            } else {
+              window.speechSynthesis.addEventListener('voiceschanged', setBestVoice, { once: true });
+            }
+          }
+          sessionStorage.setItem('fintrack_welcomed', 'true');
+        };
+
+        playGreeting();
+      }
+    }
+  }, [isLoggedIn, isOnboarding, user]);
+
   const addTransaction = async (transaction: Omit<Transaction, 'id' | 'status'>) => {
     const newTransaction: Transaction = {
       ...transaction,
       id: Math.random().toString(36).substr(2, 9),
       status: 'Completed'
     };
-    
+
     try {
       const resp = await fetch('/api/transactions', {
         method: 'POST',
@@ -56,17 +116,45 @@ export default function App() {
     }
   };
 
+  const handleLogin = (userData: any) => {
+    setUser(userData);
+    localStorage.setItem('fintrack_user', JSON.stringify(userData));
+
+    if (!localStorage.getItem('fintrack_onboarded')) {
+      setIsOnboarding(true);
+    }
+  };
+
+  const handleOnboardingComplete = (updatedUser: any) => {
+    setUser(updatedUser);
+    localStorage.setItem('fintrack_user', JSON.stringify(updatedUser));
+    localStorage.setItem('fintrack_onboarded', 'true');
+    setIsOnboarding(false);
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('fintrack_user');
+    localStorage.removeItem('fintrack_onboarded');
+    sessionStorage.removeItem('fintrack_welcomed');
+    setActiveTab('home');
+  };
+
   if (!isLoggedIn) {
-    return <LandingPage onStart={() => setIsLoggedIn(true)} />;
+    return <LandingPage onStart={handleLogin} />;
+  }
+
+  if (isOnboarding) {
+    return <Onboarding user={user} onComplete={handleOnboardingComplete} />;
   }
 
   const renderContent = () => {
     switch (activeTab) {
       case 'home':
         return (
-          <Dashboard 
-            transactions={transactions} 
-            setTransactions={setTransactions} 
+          <Dashboard
+            transactions={transactions}
+            setTransactions={setTransactions}
             incomeSources={incomeSources}
             setIncomeSources={setIncomeSources}
           />
@@ -98,11 +186,17 @@ export default function App() {
 
   return (
     <div className="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden relative w-full">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />
-      
+      <Sidebar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        isMobileMenuOpen={isMobileMenuOpen}
+        setIsMobileMenuOpen={setIsMobileMenuOpen}
+        onLogout={handleLogout}
+      />
+
       <main className="flex-1 flex flex-col overflow-hidden w-full relative">
-        <Header activeTab={activeTab} onMenuClick={() => setIsMobileMenuOpen(true)} />
-        
+        <Header activeTab={activeTab} onMenuClick={() => setIsMobileMenuOpen(true)} user={user} />
+
         <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
           <AnimatePresence mode="wait">
             <motion.div
