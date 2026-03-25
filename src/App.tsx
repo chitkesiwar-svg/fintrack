@@ -17,10 +17,23 @@ import { Plus } from 'lucide-react';
 import { DUMMY_TRANSACTIONS, CATEGORIES } from './constants';
 import { Transaction, IncomeSource } from './types';
 
+const DEFAULT_USER = {
+  id: 'user_default_local',
+  name: 'Prashansa (Auto Login)',
+  email: 'local@fintrack.app',
+  avatar: 'https://ui-avatars.com/api/?name=Prashansa&background=random&color=fff',
+  role: 'Admin',
+  isLoggedIn: true
+};
+
 export default function App() {
   const [user, setUser] = useState<any>(() => {
-    const saved = localStorage.getItem('fintrack_user');
-    return saved ? JSON.parse(saved) : null;
+    let saved = localStorage.getItem('fintrack_user');
+    if (!saved) {
+      localStorage.setItem('fintrack_user', JSON.stringify(DEFAULT_USER));
+      return DEFAULT_USER;
+    }
+    return JSON.parse(saved);
   });
   const [isOnboarding, setIsOnboarding] = useState(false);
   const isLoggedIn = !!user;

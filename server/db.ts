@@ -94,4 +94,10 @@ db.exec(`
     );
 `);
 
+// Create a persistent default local user if it doesn't exist to allow login bypass natively
+db.prepare(`
+  INSERT OR IGNORE INTO users (id, name, email, role) 
+  VALUES ('user_default_local', 'Prashansa (Auto Login)', 'local@fintrack.app', 'Admin')
+`).run();
+
 export default db;
