@@ -18,13 +18,26 @@ export const Onboarding: React.FC<OnboardingProps> = ({ user, onComplete }) => {
   };
 
   const finish = async () => {
+    const finalName = name || user?.phone || 'User';
+
     if (income) {
       await fetch('/api/settings', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ key: 'monthlyIncome', value: income })
       }).catch(console.error);
     }
-    onComplete({ ...user, name: name || user?.phone });
+
+    await fetch('/api/users/profile', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        id: user.id, 
+        name: finalName, 
+        avatar: user?.avatar || `https://ui-avatars.com/api/?name=${finalName}&background=random&color=fff`,
+        role: user?.role || 'Member'
+      })
+    }).catch(console.error);
+
+    onComplete({ ...user, name: finalName });
   };
 
   return (

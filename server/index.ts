@@ -13,172 +13,142 @@ const port = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// Transactions
-app.get('/api/transactions', (req, res) => {
+// Auth & Users
+app.post('/api/auth/login', (req, res) => {
   try {
-    const stmt = db.prepare('SELECT * FROM transactions ORDER BY date DESC');
-    const transactions = stmt.all();
-    res.json(transactions);
+    const { phone, email } = req.body;
+    let user;
+    if (phone) {
+      const stmt = db.prepare('SELECT * FROM users WHERE phone = ?');
+      user = stmt.get(phone);
+      if (!user) {
+        const id = 'user_' + Math.random().toString(36).substr(2, 9);
+        db.prepare('INSERT INTO users (id, phone) VALUES (?, ?)').run(id, phone);
+        user = { id, phone };
+      }
+    } else if (email) {
+      const stmt = db.prepare('SELECT * FROM users WHERE email = ?');
+      user = stmt.get(email);
+      if (!user) {
+        const id = 'user_' + Math.random().toString(36).substr(2, 9);
+        db.prepare('INSERT INTO users (id, email) VALUES (?, ?)').run(id, email);
+        user = { id, email };
+      }
+    } else {
+      return res.status(400).json({ error: 'Phone or email required' });
+    }
+    res.json(user);
   } catch (error) {
-    console.error('Error fetching transactions:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
-app.post('/api/transactions', (req, res) => {
+app.post('/api/users/profile', (req, res) => {
+  try {
+    const { id, name, avatar, role } = req.body;
+    db.prepare('UPDATE users SET name = ?, avatar = ?, role = ? WHERE id = ?').run(name || null, avatar || null, role || null, id);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Middleware to check user_id
+const requireUser = (req: any, res: any, next: any) => {
+  const userId = req.headers['x-user-id'];
+  if (!userId) {
+    return res.status(401).json({ error: 'Unauthorized: Missing X-User-Id header' });
+  }
+  req.userId = userId;
+  next();
+};
+
+app.use('/api/transactions', requireUser);
+app.get('/api/transactions', (req: any, res) => {
+  try {
+    const transactions = db.prepare('SELECT * FROM transactions WHERE user_id = ? ORDER BY date DESC').all(req.userId);
+    res.json(transactions);
+  } catch (error) { res.status(500).json({ error: 'Error' }); }
+});
+app.post('/api/transactions', (req: any, res) => {
   try {
     const { id, merchant, category, amount, date, status, paymentMethod, notes } = req.body;
-    const stmt = db.prepare(`
-      INSERT INTO transactions (id, merchant, category, amount, date, status, paymentMethod, notes)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    stmt.run(id, merchant, category, amount, date, status, paymentMethod, notes || null);
+    db.prepare(`INSERT INTO transactions (id, user_id, merchant, category, amount, date, status, paymentMethod, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(id, req.userId, merchant, category, amount, date, status, paymentMethod, notes || null);
     res.status(201).json({ success: true });
-  } catch (error) {
-    console.error('Error adding transaction:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
+  } catch (error) { res.status(500).json({ error: 'Error' }); }
 });
-
-app.delete('/api/transactions/:id', (req, res) => {
+app.delete('/api/transactions/:id', (req: any, res) => {
   try {
-    const stmt = db.prepare('DELETE FROM transactions WHERE id = ?');
-    stmt.run(req.params.id);
+    db.prepare('DELETE FROM transactions WHERE id = ? AND user_id = ?').run(req.params.id, req.userId);
     res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
+  } catch (error) { res.status(500).json({ error: 'Error' }); }
 });
 
-// Income Sources
-app.get('/api/income', (req, res) => {
-  try {
-    const stmt = db.prepare('SELECT * FROM income_sources');
-    const incomeSources = stmt.all();
-    res.json(incomeSources);
-  } catch (error) {
-    console.error('Error fetching income sources:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
+app.use('/api/income', requireUser);
+app.get('/api/income', (req: any, res) => {
+  try { res.json(db.prepare('SELECT * FROM income_sources WHERE user_id = ?').all(req.userId)); } 
+  catch (error) { res.status(500).json({ error: 'Error' }); }
 });
-
-app.post('/api/income', (req, res) => {
+app.post('/api/income', (req: any, res) => {
   try {
     const { id, name, amount } = req.body;
-    const stmt = db.prepare(`
-      INSERT INTO income_sources (id, name, amount)
-      VALUES (?, ?, ?)
-    `);
-    stmt.run(id, name, amount);
+    db.prepare('INSERT INTO income_sources (id, user_id, name, amount) VALUES (?, ?, ?, ?)').run(id, req.userId, name, amount);
     res.status(201).json({ success: true });
-  } catch (error) {
-    console.error('Error adding income source:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
+  } catch (error) { res.status(500).json({ error: 'Error' }); }
+});
+app.delete('/api/income/:id', (req: any, res) => {
+  try { db.prepare('DELETE FROM income_sources WHERE id = ? AND user_id = ?').run(req.params.id, req.userId); res.json({ success: true }); } 
+  catch (error) { res.status(500).json({ error: 'Error' }); }
 });
 
-app.delete('/api/income/:id', (req, res) => {
-  try {
-    const stmt = db.prepare('DELETE FROM income_sources WHERE id = ?');
-    stmt.run(req.params.id);
-    res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
+app.use('/api/emis', requireUser);
+app.get('/api/emis', (req: any, res) => {
+  try { res.json(db.prepare('SELECT * FROM emis WHERE user_id = ?').all(req.userId)); } 
+  catch (error) { res.status(500).json({ error: 'Error' }); }
 });
-
-// EMIs
-app.get('/api/emis', (req, res) => {
-  try {
-    const stmt = db.prepare('SELECT * FROM emis');
-    res.json(stmt.all());
-  } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
-
-app.post('/api/emis', (req, res) => {
+app.post('/api/emis', (req: any, res) => {
   try {
     const { id, name, amount, nextPaymentDate, status, totalTenure, remainingTenure } = req.body;
-    const stmt = db.prepare(`
-      INSERT OR REPLACE INTO emis (id, name, amount, nextPaymentDate, status, totalTenure, remainingTenure)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `);
-    stmt.run(id, name, amount, nextPaymentDate, status, totalTenure, remainingTenure);
+    db.prepare('INSERT OR REPLACE INTO emis (id, user_id, name, amount, nextPaymentDate, status, totalTenure, remainingTenure) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(id, req.userId, name, amount, nextPaymentDate, status, totalTenure, remainingTenure);
     res.status(201).json({ success: true });
-  } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
+  } catch (error) { res.status(500).json({ error: 'Error' }); }
+});
+app.delete('/api/emis/:id', (req: any, res) => {
+  try { db.prepare('DELETE FROM emis WHERE id = ? AND user_id = ?').run(req.params.id, req.userId); res.json({ success: true }); } 
+  catch (error) { res.status(500).json({ error: 'Error' }); }
 });
 
-app.delete('/api/emis/:id', (req, res) => {
-  try {
-    const stmt = db.prepare('DELETE FROM emis WHERE id = ?');
-    stmt.run(req.params.id);
-    res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
+app.use('/api/subscriptions', requireUser);
+app.get('/api/subscriptions', (req: any, res) => {
+  try { res.json(db.prepare('SELECT * FROM subscriptions WHERE user_id = ?').all(req.userId)); } 
+  catch (error) { res.status(500).json({ error: 'Error' }); }
 });
-
-// Subscriptions
-app.get('/api/subscriptions', (req, res) => {
-  try {
-    const stmt = db.prepare('SELECT * FROM subscriptions');
-    res.json(stmt.all());
-  } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
-
-app.post('/api/subscriptions', (req, res) => {
+app.post('/api/subscriptions', (req: any, res) => {
   try {
     const { id, name, category, bankDetails, amount, lastPayment, billingCycle, nextBillDate, status, paymentMethod } = req.body;
-    const stmt = db.prepare(`
-      INSERT OR REPLACE INTO subscriptions (id, name, category, bankDetails, amount, lastPayment, billingCycle, nextBillDate, status, paymentMethod)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    stmt.run(id, name, category || 'Subscriptions', bankDetails || '', amount, lastPayment || '', billingCycle || 'Monthly', nextBillDate || '', status || 'Active', paymentMethod || 'Credit Card');
+    db.prepare('INSERT OR REPLACE INTO subscriptions (id, user_id, name, category, bankDetails, amount, lastPayment, billingCycle, nextBillDate, status, paymentMethod) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(id, req.userId, name, category || 'Subscriptions', bankDetails || '', amount, lastPayment || '', billingCycle || 'Monthly', nextBillDate || '', status || 'Active', paymentMethod || 'Credit Card');
     res.status(201).json({ success: true });
-  } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
+  } catch (error) { res.status(500).json({ error: 'Error' }); }
+});
+app.delete('/api/subscriptions/:id', (req: any, res) => {
+  try { db.prepare('DELETE FROM subscriptions WHERE id = ? AND user_id = ?').run(req.params.id, req.userId); res.json({ success: true }); } 
+  catch (error) { res.status(500).json({ error: 'Error' }); }
 });
 
-app.delete('/api/subscriptions/:id', (req, res) => {
+app.use('/api/settings', requireUser);
+app.get('/api/settings', (req: any, res) => {
   try {
-    const stmt = db.prepare('DELETE FROM subscriptions WHERE id = ?');
-    stmt.run(req.params.id);
-    res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
-
-// Settings
-app.get('/api/settings', (req, res) => {
-  try {
-    const stmt = db.prepare('SELECT * FROM settings');
-    const settings = stmt.all();
-    const settingsObj = (settings as any[]).reduce((acc: any, curr: any) => {
-      acc[curr.key] = curr.value;
-      return acc;
-    }, {});
+    const settings = db.prepare('SELECT * FROM settings WHERE user_id = ?').all(req.userId);
+    const settingsObj = (settings as any[]).reduce((acc: any, curr: any) => { acc[curr.key] = curr.value; return acc; }, {});
     res.json(settingsObj);
-  } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
+  } catch (error) { res.status(500).json({ error: 'Error' }); }
 });
-
-app.post('/api/settings', (req, res) => {
+app.post('/api/settings', (req: any, res) => {
   try {
     const { key, value } = req.body;
-    const stmt = db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)');
-    stmt.run(key, value.toString());
+    db.prepare('INSERT OR REPLACE INTO settings (key, user_id, value) VALUES (?, ?, ?)').run(key, req.userId, value.toString());
     res.status(200).json({ success: true });
-  } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
+  } catch (error) { res.status(500).json({ error: 'Error' }); }
 });
 
 // Serve production build of Vite React app

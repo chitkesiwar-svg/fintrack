@@ -24,12 +24,23 @@ export const LandingPage: React.FC<{ onStart: (user?: any) => void }> = ({ onSta
     return () => clearInterval(interval);
   }, [authMode, timer]);
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     setAuthMode('google');
     setIsLoading(true);
-    setTimeout(() => {
-      onStart({ name: 'Prashansa', email: 'prashansa@gmail.com', avatar: 'https://ui-avatars.com/api/?name=Prashansa&background=random&color=fff', role: 'Admin' });
-    }, 1500);
+    try {
+      const resp = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'user@gmail.com', name: '', avatar: 'https://ui-avatars.com/api/?name=User&background=random&color=fff', role: 'Admin' })
+      });
+      const data = await resp.json();
+      setTimeout(() => {
+        onStart(data);
+      }, 1000);
+    } catch {
+      setIsLoading(false);
+      setIsError(true);
+    }
   };
 
   const handleSendOtp = (e: React.FormEvent) => {
@@ -69,7 +80,8 @@ export const LandingPage: React.FC<{ onStart: (user?: any) => void }> = ({ onSta
     }
   };
 
-  const verifyOtp = (code: string) => {
+  const verifyOtp = async (code: string) => {
+    // Development Mock bypass: 123456
     if (code === '123456' || code.length === 6) {
       if (attempts >= 3) {
         setIsError(true);
@@ -77,9 +89,21 @@ export const LandingPage: React.FC<{ onStart: (user?: any) => void }> = ({ onSta
         return;
       }
       setIsLoading(true);
-      setTimeout(() => {
-        onStart({ name: 'User', phone: '+91' + phone, role: 'Member', avatar: 'https://ui-avatars.com/api/?name=User&background=random&color=fff' });
-      }, 1500);
+      try {
+        const resp = await fetch('/api/auth/phone', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: '+91' + phone })
+        });
+        const data = await resp.json();
+        
+        setTimeout(() => {
+          onStart(data);
+        }, 1000);
+      } catch {
+        setIsLoading(false);
+        setIsError(true);
+      }
     } else {
       setIsError(true);
       setAttempts(prev => prev + 1);
@@ -179,9 +203,12 @@ export const LandingPage: React.FC<{ onStart: (user?: any) => void }> = ({ onSta
                   <form onSubmit={handleSendOtp}>
                     <label className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 block">Mobile Number</label>
                     <div className="flex items-center gap-3 mb-8">
-                      <div className="bg-slate-50 px-4 py-4 rounded-2xl border border-slate-100 font-bold text-slate-600 text-lg">
+                      <div className="bg-slate-50 px-4 py-4 rounded-2xl border border-slate-100 font-bold text-slate-600 text-lg relative">
                         +91
-                      </div>
+                          <div className="absolute -bottom-8 left-0 right-0 flex justify-center text-xs text-indigo-400 font-medium">
+                            Auto Verify: Type "123456"
+                          </div>
+                        </div>
                       <input 
                         type="tel"
                         autoFocus
