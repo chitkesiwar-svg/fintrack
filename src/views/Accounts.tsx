@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Mail, Phone, Shield, Search, ArrowRight, CreditCard, Plus } from 'lucide-react';
+import { Users, Mail, Phone, Shield, Search, ArrowRight, CreditCard, Plus, X, Save } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../types';
 
-const CARDS = [
+const INITIAL_CARDS = [
   {
     id: 1,
     type: 'Visa',
@@ -36,25 +36,59 @@ const CARDS = [
   }
 ];
 
-const SmartCardSelector = () => {
+const SmartCardSelector = ({ cards, onCardClick }: { cards: any[], onCardClick: (card: any) => void }) => {
   const [activeCard, setActiveCard] = useState(0);
+  const scrollLock = React.useRef(false);
+
+  // Fallback if cards array changes size and activeCard goes out of bounds
+  useEffect(() => {
+    if (activeCard >= cards.length && cards.length > 0) setActiveCard(cards.length - 1);
+  }, [cards.length, activeCard]);
+
+  const handleWheel = (e: React.WheelEvent) => {
+    if (scrollLock.current || cards.length === 0) return;
+    if (e.deltaY > 30) {
+      scrollLock.current = true;
+      setActiveCard((prev) => (prev - 1 + cards.length) % cards.length);
+      setTimeout(() => scrollLock.current = false, 400);
+    } else if (e.deltaY < -30) {
+      scrollLock.current = true;
+      setActiveCard((prev) => (prev + 1) % cards.length);
+      setTimeout(() => scrollLock.current = false, 400);
+    }
+  };
+
+  const handleDragEnd = (event: any, info: any) => {
+    if (cards.length === 0) return;
+    if (info.offset.y > 40) {
+      setActiveCard((prev) => (prev - 1 + cards.length) % cards.length);
+    } else if (info.offset.y < -40) {
+      setActiveCard((prev) => (prev + 1) % cards.length);
+    }
+  };
+
+  if (cards.length === 0) return <div className="h-[280px] w-full max-w-md border-2 border-dashed border-slate-200 rounded-3xl flex items-center justify-center text-slate-400">No cards assigned.</div>;
 
   return (
-    <div className="relative w-full max-w-md h-[280px]">
+    <div className="relative w-full max-w-md h-[280px]" onWheel={handleWheel}>
       <AnimatePresence>
-        {CARDS.map((card, index) => {
-          const offset = (index - activeCard + CARDS.length) % CARDS.length;
+        {cards.map((card, index) => {
+          const offset = (index - activeCard + cards.length) % cards.length;
           const isActive = offset === 0;
           
           return (
             <motion.div
               key={card.id}
-              onClick={() => setActiveCard(index)}
+              drag="y"
+              dragConstraints={{ top: 0, bottom: 0 }}
+              dragElastic={0.2}
+              onDragEnd={handleDragEnd}
+              onClick={() => isActive ? onCardClick(card) : setActiveCard(index)}
               initial={false}
               animate={{
                 top: offset * 24, // Stack spacing
                 scale: 1 - offset * 0.05, // Shrink cards behind
-                zIndex: CARDS.length - offset,
+                zIndex: cards.length - offset,
                 opacity: 1 - offset * 0.15, // Fade cards behind
               }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
@@ -114,6 +148,35 @@ const SmartCardSelector = () => {
 export const Accounts: React.FC = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Card System State
+  const [cards, setCards] = useState<any[]>(INITIAL_CARDS);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingCard, setEditingCard] = useState<any>(null);
+
+  // Card Form State
+  const [cardForm, setCardForm] = useState({
+    type: 'Visa', brand: 'Standard', userName: 'Prashansa C.', balance: 0, mask: '**** 0000', gradient: 'from-slate-900 via-slate-800 to-slate-900'
+  });
+
+  const openCardModal = (card: any = null) => {
+    setEditingCard(card);
+    if (card) {
+      setCardForm({ ...card });
+    } else {
+      setCardForm({ type: 'Visa', brand: 'Standard', userName: 'Prashansa C.', balance: 0, mask: '**** 0000', gradient: 'from-slate-900 via-slate-800 to-slate-900' });
+    }
+    setIsModalOpen(true);
+  };
+
+  const saveCard = () => {
+    if (editingCard) {
+      setCards(cards.map(c => c.id === editingCard.id ? { ...cardForm, id: c.id, shadow: c.shadow || 'shadow-slate-500/20' } : c));
+    } else {
+      setCards([{ ...cardForm, id: Math.random(), shadow: 'shadow-slate-500/20' }, ...cards]);
+    }
+    setIsModalOpen(false);
+  };
 
   useEffect(() => {
     fetch('/api/admin/users')
@@ -141,7 +204,10 @@ export const Accounts: React.FC = () => {
           </div>
           
           <div className="flex flex-col sm:flex-row gap-4 mb-8">
-            <button className="flex-1 py-4 px-6 bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-all shadow-xl shadow-slate-200">
+            <button 
+              onClick={() => openCardModal()}
+              className="flex-1 py-4 px-6 bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-all shadow-xl shadow-slate-200"
+            >
               <Plus className="w-5 h-5" />
               Add New Card
             </button>
@@ -153,7 +219,7 @@ export const Accounts: React.FC = () => {
         </div>
 
         <div className="w-full lg:w-1/2 flex justify-center lg:justify-end">
-          <SmartCardSelector />
+          <SmartCardSelector cards={cards} onCardClick={openCardModal} />
         </div>
       </div>
 
@@ -259,6 +325,101 @@ export const Accounts: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* Card Details/Edit Modal */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setIsModalOpen(false)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-md bg-white rounded-[40px] shadow-2xl p-8 overflow-hidden z-10"
+            >
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="absolute top-6 right-6 p-2 bg-slate-50 text-slate-400 hover:text-slate-600 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              
+              <h2 className="text-2xl font-bold text-slate-800 mb-6">{editingCard ? 'Edit Card Details' : 'Add New Card'}</h2>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Card Type</label>
+                  <select 
+                    value={cardForm.type} onChange={e => setCardForm({...cardForm, type: e.target.value})}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-100 bg-slate-50"
+                  >
+                    <option value="Visa">Visa</option>
+                    <option value="Mastercard">Mastercard</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Card Brand (e.g. Platinum)</label>
+                  <input 
+                    type="text" value={cardForm.brand} onChange={e => setCardForm({...cardForm, brand: e.target.value})}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-100"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Mask (Last 4 digits)</label>
+                  <input 
+                    type="text" value={cardForm.mask} onChange={e => setCardForm({...cardForm, mask: e.target.value})}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-100 font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Balance (₹)</label>
+                  <input 
+                    type="number" value={cardForm.balance} onChange={e => setCardForm({...cardForm, balance: parseFloat(e.target.value) || 0})}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-100"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Card Color Theme</label>
+                  <div className="flex gap-2">
+                    {['from-slate-900 via-slate-800 to-slate-900', 'from-indigo-600 via-purple-600 to-indigo-800', 'from-emerald-500 via-teal-500 to-emerald-700', 'from-rose-500 via-red-500 to-rose-700'].map(grad => (
+                      <button 
+                        key={grad} onClick={() => setCardForm({...cardForm, gradient: grad})}
+                        className={cn("w-10 h-10 rounded-full bg-gradient-to-br border-2", grad, cardForm.gradient === grad ? 'border-indigo-500 ring-2 ring-indigo-200' : 'border-transparent')}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pt-4 flex gap-4">
+                  {editingCard && (
+                    <button 
+                      onClick={() => { setCards(cards.filter(c => c.id !== editingCard.id)); setIsModalOpen(false); }}
+                      className="py-4 px-6 bg-rose-50 text-rose-600 rounded-2xl font-bold flex border border-rose-100 hover:bg-rose-100 transition-colors"
+                    >
+                      Delete
+                    </button>
+                  )}
+                  <button 
+                    onClick={saveCard}
+                    className="flex-1 py-4 px-6 bg-indigo-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200"
+                  >
+                    <Save className="w-5 h-5" />
+                    {editingCard ? 'Save Changes' : 'Add Card'}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
       </div>
     </div>
   );
