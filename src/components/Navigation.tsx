@@ -4,7 +4,7 @@ import {
   PieChart, Target, Repeat, FileText, Download, Settings,
   LogOut, Menu, X, Search, Bell, Calendar as CalendarIcon,
   ChevronDown, UserPlus, Trash2, Edit2, Check, AlertCircle,
-  MessageSquare, Send, Sparkles
+  MessageSquare, Send, Sparkles, Users
 } from 'lucide-react';
 import { cn } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
@@ -24,6 +24,7 @@ const sidebarItems = [
   { id: 'budget-categories', label: 'Budget & Categories', icon: Grid },
   { id: 'savings', label: 'Savings Goals', icon: Target },
   { id: 'invoices', label: 'Invoices', icon: FileText },
+  { id: 'accounts', label: 'Accounts', icon: Users },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 

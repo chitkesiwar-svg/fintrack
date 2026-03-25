@@ -7,10 +7,13 @@ import { Analytics } from './views/Analytics';
 import { SavingsGoals } from './views/SavingsGoals';
 import { Invoices } from './views/Invoices';
 import { Settings } from './views/Settings';
+import { Accounts } from './views/Accounts';
+import { Transactions } from './views/Transactions';
 import { LandingPage } from './views/LandingPage';
 import { Onboarding } from './views/Onboarding';
 import { SpendWiseAI } from './components/SpendWiseAI';
 import { motion, AnimatePresence } from 'motion/react';
+import { Plus } from 'lucide-react';
 import { DUMMY_TRANSACTIONS, CATEGORIES } from './constants';
 import { Transaction, IncomeSource } from './types';
 
@@ -157,8 +160,13 @@ export default function App() {
             setTransactions={setTransactions}
             incomeSources={incomeSources}
             setIncomeSources={setIncomeSources}
+            onViewTransactions={() => setActiveTab('transactions')}
           />
         );
+      case 'transactions':
+        return <Transactions transactions={transactions} />;
+      case 'accounts':
+        return <Accounts />;
       case 'analytics':
         return <Analytics transactions={transactions} />;
       case 'add-expense':
@@ -211,6 +219,14 @@ export default function App() {
           </AnimatePresence>
         </div>
       </main>
+
+      <button
+        onClick={() => setActiveTab('add-expense')}
+        className="fixed bottom-24 right-6 w-14 h-14 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white rounded-full flex items-center justify-center shadow-lg shadow-indigo-200 transition-all z-40 group"
+        title="Quick Add Expense"
+      >
+        <Plus className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
+      </button>
 
       <SpendWiseAI />
 

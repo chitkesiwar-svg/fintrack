@@ -53,6 +53,16 @@ app.post('/api/users/profile', (req, res) => {
   }
 });
 
+// Admin/Users specific household endpoint
+app.get('/api/admin/users', (req, res) => {
+  try {
+    const users = db.prepare('SELECT id, name, phone, email, avatar, role FROM users').all();
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // Middleware to check user_id
 const requireUser = (req: any, res: any, next: any) => {
   const userId = req.headers['x-user-id'];

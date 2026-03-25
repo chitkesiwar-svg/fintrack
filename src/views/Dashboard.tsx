@@ -18,6 +18,7 @@ interface DashboardProps {
   setTransactions: React.Dispatch<React.SetStateAction<Transaction[]>>;
   incomeSources: IncomeSource[];
   setIncomeSources: React.Dispatch<React.SetStateAction<IncomeSource[]>>;
+  onViewTransactions: () => void;
 }
 
 // Sub-components for Modals to prevent full Dashboard re-renders
@@ -187,7 +188,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
   transactions, 
   setTransactions,
   incomeSources,
-  setIncomeSources
+  setIncomeSources,
+  onViewTransactions
 }) => {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [emis, setEmis] = useState<EMI[]>([]);
@@ -462,12 +464,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center justify-between">
+        <div 
+          onClick={onViewTransactions}
+          className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center justify-between group cursor-pointer hover:border-rose-200 hover:shadow-md transition-all"
+        >
           <div>
-            <p className="text-sm font-medium text-slate-400 mb-1">Monthly Expenses</p>
+            <p className="text-sm font-medium text-slate-400 mb-1 group-hover:text-rose-400 transition-colors">Monthly Expenses</p>
             <h3 className="text-2xl font-bold text-rose-600">₹{totalMonthlyExpenses.toLocaleString()}</h3>
           </div>
-          <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-rose-50">
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-rose-50 group-hover:bg-rose-100 transition-colors">
             <ArrowDownRight className="w-6 h-6 text-rose-600" />
           </div>
         </div>
