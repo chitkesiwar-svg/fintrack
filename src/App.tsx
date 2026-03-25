@@ -29,11 +29,8 @@ const DEFAULT_USER = {
 export default function App() {
   const [user, setUser] = useState<any>(() => {
     let saved = localStorage.getItem('fintrack_user');
-    if (!saved) {
-      localStorage.setItem('fintrack_user', JSON.stringify(DEFAULT_USER));
-      return DEFAULT_USER;
-    }
-    return JSON.parse(saved);
+    if (saved) return JSON.parse(saved);
+    return null; // No user → show Landing
   });
   const [isOnboarding, setIsOnboarding] = useState(false);
   const isLoggedIn = !!user;
@@ -233,15 +230,16 @@ export default function App() {
         </div>
       </main>
 
-      <button
-        onClick={() => setActiveTab('add-expense')}
-        className="fixed bottom-24 right-6 w-14 h-14 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white rounded-full flex items-center justify-center shadow-lg shadow-indigo-200 transition-all z-40 group"
-        title="Quick Add Expense"
-      >
-        <Plus className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
-      </button>
-
-      <SpendWiseAI />
+      <div className="fixed bottom-6 right-6 flex items-center gap-3 z-40">
+        <button
+          onClick={() => setActiveTab('add-expense')}
+          className="w-14 h-14 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white rounded-full flex items-center justify-center shadow-lg shadow-indigo-200 transition-all group"
+          title="Quick Add Expense"
+        >
+          <Plus className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
+        </button>
+        <SpendWiseAI />
+      </div>
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {

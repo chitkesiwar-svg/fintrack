@@ -5,7 +5,7 @@ import {
   Edit2, Check, X, Sliders,
   Utensils, ShoppingBag, Film, Car, 
   Activity, Zap, CreditCard, TrendingUp, 
-  BookOpen, MoreHorizontal
+  BookOpen, MoreHorizontal, Calendar, User, Mail, Phone
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { DUMMY_TRANSACTIONS, DUMMY_SUBSCRIPTIONS, DUMMY_FAMILY, DUMMY_EMIS } from '../constants';
@@ -211,6 +211,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [isManagingSafeToSpend, setIsManagingSafeToSpend] = useState(false);
   const [isAddingFamilyMember, setIsAddingFamilyMember] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
+  const [filterMonth, setFilterMonth] = useState('');
+  const [showAllTx, setShowAllTx] = useState(false);
   
   // Family Member Form State
   const [newMemberName, setNewMemberName] = useState('');
@@ -997,6 +999,20 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <div className="p-6 border-b border-slate-50 flex items-center justify-between">
             <h3 className="font-bold text-slate-800">Recent Transactions</h3>
             <div className="flex items-center gap-2">
+              <div className="relative">
+                <input 
+                  type="month" value={filterMonth} onChange={e => setFilterMonth(e.target.value)}
+                  className="w-8 h-8 opacity-0 absolute inset-0 cursor-pointer"
+                />
+                <button className={`p-2 rounded-lg transition-all ${filterMonth ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-slate-50 text-slate-400'}`}>
+                  <Calendar className="w-4 h-4" />
+                </button>
+              </div>
+              {filterMonth && (
+                <button onClick={() => setFilterMonth('')} className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg">
+                  Clear
+                </button>
+              )}
               <button className="p-2 hover:bg-slate-50 rounded-lg text-slate-400"><MoreVertical className="w-4 h-4" /></button>
             </div>
           </div>
@@ -1011,7 +1027,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {transactions.map((t) => (
+                {(() => {
+                  let filtered = transactions;
+                  if (filterMonth) {
+                    filtered = transactions.filter(t => t.date.startsWith(filterMonth));
+                  }
+                  const visible = showAllTx ? filtered : filtered.slice(0, 4);
+                  return visible.map((t) => (
                   <tr 
                     key={t.id} 
                     onClick={() => console.log('Transaction clicked:', t)}
@@ -1045,10 +1067,21 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       </button>
                     </td>
                   </tr>
-                ))}
+                  ));
+                })()}
               </tbody>
             </table>
           </div>
+          {!showAllTx && transactions.length > 4 && (
+            <div className="p-4 border-t border-slate-50 text-center">
+              <button 
+                onClick={() => onViewTransactions()}
+                className="text-sm font-bold text-indigo-600 hover:text-indigo-700 transition-colors"
+              >
+                View More →
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Charts Section below Transactions */}

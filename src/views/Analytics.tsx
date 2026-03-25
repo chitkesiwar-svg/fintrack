@@ -391,7 +391,45 @@ export const Analytics: React.FC<AnalyticsProps> = ({ transactions }) => {
             </div>
           </motion.div>
         )}
-      </AnimatePresence>
+    </AnimatePresence>
+
+      {/* All Transactions */}
+      <div className="bg-white p-6 sm:p-8 rounded-[32px] sm:rounded-[40px] border border-slate-100 shadow-sm">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-bold text-slate-800">All Transactions</h3>
+          <span className="text-[10px] font-bold bg-slate-100 text-slate-500 px-3 py-1 rounded-full">{transactions.length} total</span>
+        </div>
+        {transactions.length === 0 ? (
+          <div className="text-center py-12 text-slate-400">
+            <p className="text-sm">No transactions recorded yet.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-slate-50/50 text-[10px] uppercase tracking-widest font-bold text-slate-400">
+                  <th className="px-6 py-3">Merchant</th>
+                  <th className="px-6 py-3">Category</th>
+                  <th className="px-6 py-3">Date</th>
+                  <th className="px-6 py-3">Amount</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {transactions.map(t => (
+                  <tr key={t.id} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="px-6 py-3 text-sm font-bold text-slate-800">{t.merchant}</td>
+                    <td className="px-6 py-3">
+                      <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md uppercase tracking-wider">{t.category}</span>
+                    </td>
+                    <td className="px-6 py-3 text-sm text-slate-400">{t.date}</td>
+                    <td className="px-6 py-3 text-sm font-bold text-slate-800">₹{t.amount.toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

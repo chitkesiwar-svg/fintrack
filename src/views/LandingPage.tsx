@@ -352,10 +352,10 @@ export const LandingPage: React.FC<{ onStart: (user?: any) => void }> = ({ onSta
           className="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
           <button 
-            onClick={() => setAuthMode('select')}
+            onClick={() => onStart({ id: 'user_default_local', name: '', email: 'local@fintrack.app', avatar: 'https://ui-avatars.com/api/?name=User&background=random&color=fff', role: 'Admin', isLoggedIn: true })}
             className="w-full sm:w-auto px-10 py-5 bg-indigo-600 text-white rounded-2xl text-lg font-bold shadow-2xl shadow-indigo-200 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3"
           >
-            Start Tracking Now
+            Get Started Free
             <ArrowRight className="w-6 h-6" />
           </button>
           <button className="w-full sm:w-auto px-10 py-5 bg-white border border-slate-200 text-slate-600 rounded-2xl text-lg font-bold hover:bg-slate-50 transition-all">

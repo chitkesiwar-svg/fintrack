@@ -146,17 +146,15 @@ const SmartCardSelector = ({ cards, onCardClick }: { cards: any[], onCardClick: 
 };
 
 export const Accounts: React.FC = () => {
-  const [users, setUsers] = useState<any[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  
   // Card System State
   const [cards, setCards] = useState<any[]>(INITIAL_CARDS);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCard, setEditingCard] = useState<any>(null);
+  const [showCardSettings, setShowCardSettings] = useState(false);
 
   // Card Form State
   const [cardForm, setCardForm] = useState({
-    type: 'Visa', brand: 'Standard', userName: 'Prashansa C.', balance: 0, mask: '**** 0000', gradient: 'from-slate-900 via-slate-800 to-slate-900'
+    type: 'Visa', brand: 'Standard', userName: 'Prashansa C.', balance: 0, mask: '**** 0000', gradient: 'from-slate-900 via-slate-800 to-slate-900', status: 'Active'
   });
 
   const openCardModal = (card: any = null) => {
@@ -164,7 +162,7 @@ export const Accounts: React.FC = () => {
     if (card) {
       setCardForm({ ...card });
     } else {
-      setCardForm({ type: 'Visa', brand: 'Standard', userName: 'Prashansa C.', balance: 0, mask: '**** 0000', gradient: 'from-slate-900 via-slate-800 to-slate-900' });
+      setCardForm({ type: 'Visa', brand: 'Standard', userName: 'Prashansa C.', balance: 0, mask: '**** 0000', gradient: 'from-slate-900 via-slate-800 to-slate-900', status: 'Active' });
     }
     setIsModalOpen(true);
   };
@@ -178,20 +176,9 @@ export const Accounts: React.FC = () => {
     setIsModalOpen(false);
   };
 
-  useEffect(() => {
-    fetch('/api/admin/users')
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) setUsers(data);
-      })
-      .catch(err => console.error('Failed to load users:', err));
-  }, []);
-
-  const filteredUsers = users.filter(u => 
-    (u.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-    (u.email || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-    (u.phone || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const toggleCardStatus = (id: number) => {
+    setCards(cards.map(c => c.id === id ? { ...c, status: c.status === 'Active' ? 'Paused' : 'Active' } : c));
+  };
 
   return (
     <div className="space-y-12">
@@ -211,7 +198,15 @@ export const Accounts: React.FC = () => {
               <Plus className="w-5 h-5" />
               Add New Card
             </button>
-            <button className="flex-1 py-4 px-6 bg-white border-2 border-slate-100 text-slate-700 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-50 hover:border-slate-200 transition-all">
+            <button 
+              onClick={() => setShowCardSettings(!showCardSettings)}
+              className={cn(
+                "flex-1 py-4 px-6 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all",
+                showCardSettings 
+                  ? "bg-indigo-600 text-white shadow-xl shadow-indigo-200" 
+                  : "bg-white border-2 border-slate-100 text-slate-700 hover:bg-slate-50 hover:border-slate-200"
+              )}
+            >
               <CreditCard className="w-5 h-5" />
               Card Settings
             </button>
@@ -223,108 +218,65 @@ export const Accounts: React.FC = () => {
         </div>
       </div>
 
-      <hr className="border-slate-100" />
-
-      {/* Household Users Section */}
-      <div className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-800">Household Members</h2>
-            <p className="text-slate-500 text-sm mt-1">Manage all registered users synced to this backend.</p>
-          </div>
-          
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input 
-              type="text" 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search users..." 
-              className="w-full md:w-64 pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-100 outline-none transition-all"
-            />
-          </div>
-        </div>
-
-      <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-100">
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">User</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Contact</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Role</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Account ID</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {filteredUsers.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-slate-500">
-                    <Users className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                    <p>No users found matching your search.</p>
-                  </td>
-                </tr>
-              ) : (
-                filteredUsers.map((user, idx) => (
-                  <motion.tr 
-                    key={user.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.05 }}
-                    className="hover:bg-slate-50 transition-colors"
+      {/* Card Settings List */}
+      <AnimatePresence>
+        {showCardSettings && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
+              <div className="p-6 border-b border-slate-50">
+                <h3 className="font-bold text-slate-800">All Cards</h3>
+                <p className="text-xs text-slate-400 mt-1">Manage card status and view details</p>
+              </div>
+              <div className="divide-y divide-slate-50">
+                {cards.map((card, idx) => (
+                  <motion.div 
+                    key={card.id}
+                    initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.05 }}
+                    className="flex items-center justify-between p-5 hover:bg-slate-50/50 transition-colors"
                   >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-3">
-                        <img 
-                          src={user.avatar || `https://ui-avatars.com/api/?name=${user.name || 'User'}&background=random&color=fff`} 
-                          alt="Avatar" 
-                          className="w-10 h-10 rounded-full border-2 border-indigo-50"
-                        />
-                        <div>
-                          <p className="font-bold text-slate-800">{user.name || 'Anonymous User'}</p>
-                          <p className="text-xs text-slate-400">Joined tracking</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex flex-col gap-1">
-                        {user.email && (
-                          <div className="flex items-center gap-2 text-sm text-slate-600">
-                            <Mail className="w-4 h-4 text-slate-400" />
-                            {user.email}
+                    <div className="flex items-center gap-4">
+                      <div className={cn("w-12 h-8 rounded-lg bg-gradient-to-br flex items-center justify-center", card.gradient)}>
+                        {card.type === 'Mastercard' ? (
+                          <div className="flex">
+                            <div className="w-4 h-4 bg-rose-400 rounded-full opacity-90"></div>
+                            <div className="w-4 h-4 bg-amber-400 rounded-full opacity-90 -ml-2"></div>
                           </div>
-                        )}
-                        {user.phone && (
-                          <div className="flex items-center gap-2 text-sm text-slate-600">
-                            <Phone className="w-4 h-4 text-slate-400" />
-                            {user.phone}
-                          </div>
-                        )}
-                        {!user.email && !user.phone && (
-                          <span className="text-sm text-slate-400 italic">No contact info</span>
+                        ) : (
+                          <span className="text-white text-[8px] font-extrabold italic">VISA</span>
                         )}
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-1.5">
-                        <Shield className={`w-4 h-4 ${user.role === 'Admin' ? 'text-indigo-500' : 'text-slate-400'}`} />
-                        <span className={`text-sm font-medium ${user.role === 'Admin' ? 'text-indigo-600' : 'text-slate-600'}`}>
-                          {user.role || 'Member'}
-                        </span>
+                      <div>
+                        <p className="font-bold text-slate-800 text-sm">{card.brand}</p>
+                        <p className="text-xs text-slate-400 font-mono">{card.mask}</p>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <code className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-md font-mono">
-                        {user.id}
-                      </code>
-                    </td>
-                  </motion.tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                    </div>
+                    <div className="flex items-center gap-6">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden sm:block">{card.type}</span>
+                      <button
+                        onClick={() => toggleCardStatus(card.id)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all",
+                          (card.status || 'Active') === 'Active' 
+                            ? "bg-emerald-50 text-emerald-600 border border-emerald-100" 
+                            : "bg-slate-100 text-slate-400 border border-slate-200"
+                        )}
+                      >
+                        {card.status || 'Active'}
+                      </button>
+                      <button onClick={() => openCardModal(card)} className="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Card Details/Edit Modal */}
       <AnimatePresence>
@@ -420,7 +372,8 @@ export const Accounts: React.FC = () => {
           </div>
         )}
       </AnimatePresence>
-      </div>
+
     </div>
   );
 };
+
