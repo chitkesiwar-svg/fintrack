@@ -28,15 +28,13 @@ export const LandingPage: React.FC<{ onStart: (user?: any) => void }> = ({ onSta
     setAuthMode('google');
     setIsLoading(true);
     try {
-      const resp = await fetch('/api/auth/google', {
+      const resp = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: 'user@gmail.com', name: '', avatar: 'https://ui-avatars.com/api/?name=User&background=random&color=fff', role: 'Admin' })
       });
       const data = await resp.json();
-      setTimeout(() => {
-        onStart(data);
-      }, 1000);
+      onStart(data);
     } catch {
       setIsLoading(false);
       setIsError(true);
@@ -47,12 +45,12 @@ export const LandingPage: React.FC<{ onStart: (user?: any) => void }> = ({ onSta
     e.preventDefault();
     if (phone.length < 10) return;
     setIsLoading(true);
-    // Mock network call
+    // Mock network call speed up
     setTimeout(() => {
       setIsLoading(false);
       setTimer(30);
       setAuthMode('otp');
-    }, 1000);
+    }, 200);
   };
 
   const handleOtpChange = (index: number, value: string) => {
@@ -90,17 +88,18 @@ export const LandingPage: React.FC<{ onStart: (user?: any) => void }> = ({ onSta
       }
       setIsLoading(true);
       try {
-        const resp = await fetch('/api/auth/phone', {
+        const resp = await fetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ phone: '+91' + phone })
         });
-        const data = await resp.json();
         
-        setTimeout(() => {
-          onStart(data);
-        }, 1000);
-      } catch {
+        if (!resp.ok) throw new Error('Auth failed');
+        
+        const data = await resp.json();
+        onStart(data);
+      } catch (err) {
+        console.error(err);
         setIsLoading(false);
         setIsError(true);
       }
@@ -109,7 +108,7 @@ export const LandingPage: React.FC<{ onStart: (user?: any) => void }> = ({ onSta
       setAttempts(prev => prev + 1);
       setOtp(['', '', '', '', '', '']);
       otpInputs.current[0]?.focus();
-      setTimeout(() => setIsError(false), 500);
+      setTimeout(() => setIsError(false), 2000);
     }
   };
 
@@ -188,11 +187,24 @@ export const LandingPage: React.FC<{ onStart: (user?: any) => void }> = ({ onSta
 
               {authMode === 'google' && (
                 <div className="text-center py-8">
-                  <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                    <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-slate-800 mb-2">Authenticating</h2>
-                  <p className="text-slate-500 font-medium">Securely logging you in with Google...</p>
+                  {isError ? (
+                    <>
+                      <div className="w-20 h-20 bg-rose-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                        <X className="w-10 h-10 text-rose-600" />
+                      </div>
+                      <h2 className="text-2xl font-bold text-slate-800 mb-2">Login Failed</h2>
+                      <p className="text-slate-500 font-medium">Could not establish contact with the backend. Please check your connection.</p>
+                      <button onClick={() => { setIsError(false); setAuthMode('select'); }} className="mt-8 text-indigo-600 font-bold hover:underline transition-all">Go Back</button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                        <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
+                      </div>
+                      <h2 className="text-2xl font-bold text-slate-800 mb-2">Authenticating</h2>
+                      <p className="text-slate-500 font-medium">Securely logging you in with Google...</p>
+                    </>
+                  )}
                 </div>
               )}
 
