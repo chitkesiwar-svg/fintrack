@@ -291,12 +291,12 @@ export const LandingPage: React.FC<{ onStart: (user?: any) => void }> = ({ onSta
       </AnimatePresence>
 
       {/* Navigation */}
-      <nav className="max-w-7xl mx-auto px-8 py-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
-            <Sparkles className="text-white w-6 h-6" />
+      <nav className="max-w-7xl mx-auto px-4 sm:px-8 py-4 sm:py-6 flex items-center justify-between">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-indigo-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
+            <Sparkles className="text-white w-4 h-4 sm:w-6 sm:h-6" />
           </div>
-          <span className="font-bold text-2xl tracking-tight text-slate-800">FinTrack</span>
+          <span className="font-bold text-xl sm:text-2xl tracking-tight text-slate-800">FinTrack</span>
         </div>
         <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-500">
           <a href="#" className="hover:text-indigo-600 transition-colors">Features</a>
@@ -304,23 +304,24 @@ export const LandingPage: React.FC<{ onStart: (user?: any) => void }> = ({ onSta
           <a href="#" className="hover:text-indigo-600 transition-colors">Pricing</a>
           <a href="#" className="hover:text-indigo-600 transition-colors">Testimonials</a>
         </div>
-        <div className="flex items-center gap-4">
-          <button onClick={() => setAuthMode('select')} className="text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors">Login</button>
+        <div className="flex items-center gap-2 sm:gap-4">
+          <button onClick={() => setAuthMode('select')} className="text-xs sm:text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors hidden sm:block">Login</button>
           <button 
             onClick={() => setAuthMode('select')}
-            className="px-6 py-3 bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-xl shadow-indigo-100 hover:scale-105 active:scale-95 transition-all"
+            className="px-4 sm:px-6 py-2.5 sm:py-3 bg-indigo-600 text-white rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold shadow-xl shadow-indigo-100 hover:scale-105 active:scale-95 transition-all"
           >
-            Get Started Free
+            <span className="hidden sm:inline">Get Started Free</span>
+            <span className="sm:hidden">Get Started</span>
           </button>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-8 pt-20 pb-32 text-center relative">
+      <section className="max-w-7xl mx-auto px-4 sm:px-8 pt-12 sm:pt-20 pb-16 sm:pb-32 text-center relative">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold uppercase tracking-widest mb-8"
+          className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-indigo-50 text-indigo-600 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-6 sm:mb-8"
         >
           <Sparkles className="w-3 h-3" />
           <span>AI-Powered Personal Finance</span>
@@ -330,7 +331,7 @@ export const LandingPage: React.FC<{ onStart: (user?: any) => void }> = ({ onSta
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="text-6xl md:text-8xl font-black text-slate-900 tracking-tight leading-[0.9] mb-8"
+          className="text-3xl sm:text-5xl md:text-6xl lg:text-8xl font-black text-slate-900 tracking-tight leading-[0.9] mb-6 sm:mb-8"
         >
           Track your money <br />
           <span className="text-indigo-600">automatically</span> with AI.
@@ -340,7 +341,7 @@ export const LandingPage: React.FC<{ onStart: (user?: any) => void }> = ({ onSta
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="max-w-2xl mx-auto text-xl text-slate-500 mb-12"
+          className="max-w-2xl mx-auto text-base sm:text-xl text-slate-500 mb-8 sm:mb-12 px-2"
         >
           FinTrack uses advanced AI to scan receipts, categorize expenses, and provide deep insights into your spending habits.
         </motion.p>
@@ -380,14 +381,14 @@ export const LandingPage: React.FC<{ onStart: (user?: any) => void }> = ({ onSta
       </section>
 
       {/* Features */}
-      <section className="bg-slate-50 py-32">
-        <div className="max-w-7xl mx-auto px-8">
-          <div className="text-center mb-20">
-            <h2 className="text-4xl font-bold text-slate-900 mb-4">Everything you need to master your money</h2>
-            <p className="text-slate-500 max-w-2xl mx-auto">Powerful features designed to give you total control over your financial life.</p>
+      <section className="bg-slate-50 py-16 sm:py-32">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8">
+          <div className="text-center mb-12 sm:mb-20">
+            <h2 className="text-2xl sm:text-4xl font-bold text-slate-900 mb-3 sm:mb-4">Everything you need to master your money</h2>
+            <p className="text-slate-500 max-w-2xl mx-auto text-sm sm:text-base px-2">Powerful features designed to give you total control over your financial life.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-8">
             {[
               { icon: Zap, title: 'AI Invoice Scanner', desc: 'Just snap a photo and our AI extracts all details automatically.' },
               { icon: PieChart, title: 'Smart Reports', desc: 'Deep visual insights into where your money is going every month.' },
@@ -396,7 +397,7 @@ export const LandingPage: React.FC<{ onStart: (user?: any) => void }> = ({ onSta
               { icon: Star, title: 'Multi-currency', desc: 'Manage expenses in any currency with live exchange rates.' },
               { icon: Sparkles, title: 'AI Predictions', desc: 'Our AI predicts future expenses based on your history.' },
             ].map((f, i) => (
-              <div key={i} className="bg-white p-10 rounded-[40px] border border-slate-100 shadow-sm hover:shadow-xl transition-all group">
+              <div key={i} className="bg-white p-6 sm:p-10 rounded-2xl sm:rounded-[40px] border border-slate-100 shadow-sm hover:shadow-xl transition-all group">
                 <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 mb-8 group-hover:scale-110 transition-transform">
                   <f.icon className="w-8 h-8" />
                 </div>
@@ -409,11 +410,11 @@ export const LandingPage: React.FC<{ onStart: (user?: any) => void }> = ({ onSta
       </section>
 
       {/* How it works */}
-      <section className="py-32">
-        <div className="max-w-7xl mx-auto px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+      <section className="py-16 sm:py-32">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
             <div>
-              <h2 className="text-5xl font-bold text-slate-900 mb-12">How FinTrack Works</h2>
+              <h2 className="text-3xl sm:text-5xl font-bold text-slate-900 mb-8 sm:mb-12">How FinTrack Works</h2>
               <div className="space-y-12">
                 {[
                   { step: '01', title: 'Connect your accounts', desc: 'Securely link your bank accounts and credit cards in seconds.' },
@@ -431,7 +432,7 @@ export const LandingPage: React.FC<{ onStart: (user?: any) => void }> = ({ onSta
                 ))}
               </div>
             </div>
-            <div className="relative">
+            <div className="relative hidden lg:block">
               <div className="absolute -inset-10 bg-indigo-600/5 rounded-full blur-3xl"></div>
               <img 
                 src="https://picsum.photos/seed/fintrack-how/800/1000" 
@@ -444,19 +445,19 @@ export const LandingPage: React.FC<{ onStart: (user?: any) => void }> = ({ onSta
       </section>
 
       {/* Pricing */}
-      <section className="bg-slate-900 py-32 text-white">
-        <div className="max-w-7xl mx-auto px-8">
-          <div className="text-center mb-20">
-            <h2 className="text-5xl font-bold mb-4">Simple, transparent pricing</h2>
-            <p className="text-slate-400">Choose the plan that fits your financial goals.</p>
+      <section className="bg-slate-900 py-16 sm:py-32 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8">
+          <div className="text-center mb-12 sm:mb-20">
+            <h2 className="text-3xl sm:text-5xl font-bold mb-3 sm:mb-4">Simple, transparent pricing</h2>
+            <p className="text-slate-400 text-sm sm:text-base">Choose the plan that fits your financial goals.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <div className="bg-white/5 border border-white/10 p-12 rounded-[40px] backdrop-blur-sm">
+            <div className="bg-white/5 border border-white/10 p-6 sm:p-12 rounded-2xl sm:rounded-[40px] backdrop-blur-sm">
               <h3 className="text-2xl font-bold mb-2">Free</h3>
               <p className="text-slate-400 mb-8">Perfect for individuals just starting out.</p>
-              <div className="text-5xl font-black mb-12">₹0 <span className="text-lg font-normal text-slate-500">/mo</span></div>
-              <ul className="space-y-4 mb-12">
+              <div className="text-3xl sm:text-5xl font-black mb-8 sm:mb-12">₹0 <span className="text-base sm:text-lg font-normal text-slate-500">/mo</span></div>
+              <ul className="space-y-3 sm:space-y-4 mb-8 sm:mb-12">
                 {['Manual tracking', 'Basic reports', '1 Bank connection', 'Standard support'].map((item, i) => (
                   <li key={i} className="flex items-center gap-3 text-slate-300">
                     <Check className="w-5 h-5 text-indigo-400" />
@@ -467,12 +468,12 @@ export const LandingPage: React.FC<{ onStart: (user?: any) => void }> = ({ onSta
               <button onClick={() => setAuthMode('select')} className="w-full py-4 bg-white/10 hover:bg-white/20 rounded-2xl font-bold transition-all">Get Started</button>
             </div>
 
-            <div className="bg-indigo-600 p-12 rounded-[40px] shadow-2xl shadow-indigo-500/20 relative overflow-hidden">
-              <div className="absolute top-8 right-8 bg-white/20 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest">Most Popular</div>
+            <div className="bg-indigo-600 p-6 sm:p-12 rounded-2xl sm:rounded-[40px] shadow-2xl shadow-indigo-500/20 relative overflow-hidden">
+              <div className="absolute top-6 right-6 sm:top-8 sm:right-8 bg-white/20 px-3 sm:px-4 py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-widest">Most Popular</div>
               <h3 className="text-2xl font-bold mb-2">Premium</h3>
               <p className="text-indigo-100 mb-8">For power users who want total control.</p>
-              <div className="text-5xl font-black mb-12">₹499 <span className="text-lg font-normal text-indigo-200">/mo</span></div>
-              <ul className="space-y-4 mb-12">
+              <div className="text-3xl sm:text-5xl font-black mb-8 sm:mb-12">₹499 <span className="text-base sm:text-lg font-normal text-indigo-200">/mo</span></div>
+              <ul className="space-y-3 sm:space-y-4 mb-8 sm:mb-12">
                 {['Unlimited AI scanning', 'Advanced analytics', 'Unlimited bank sync', 'Family sharing', 'Priority support'].map((item, i) => (
                   <li key={i} className="flex items-center gap-3 text-indigo-50">
                     <Check className="w-5 h-5 text-white" />
@@ -487,8 +488,8 @@ export const LandingPage: React.FC<{ onStart: (user?: any) => void }> = ({ onSta
       </section>
 
       {/* Footer */}
-      <footer className="py-20 border-t border-slate-100">
-        <div className="max-w-7xl mx-auto px-8 flex flex-col md:flex-row items-center justify-between gap-8">
+      <footer className="py-12 sm:py-20 border-t border-slate-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-8">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
               <Sparkles className="text-white w-5 h-5" />

@@ -70,12 +70,13 @@ export const SpendWiseAI: React.FC = () => {
 
   return (
     <>
-      {/* Floating Button */}
+      {/* AI Button - positioned by parent container in App.tsx */}
       <button 
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-8 right-8 w-14 h-14 bg-indigo-600 rounded-full flex items-center justify-center shadow-2xl shadow-indigo-300 text-white hover:scale-110 transition-all z-40"
+        className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-full flex items-center justify-center shadow-lg shadow-indigo-200 text-white hover:scale-110 active:scale-95 transition-all"
+        title="SpendWise AI"
       >
-        <Sparkles className="w-6 h-6" />
+        <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" />
       </button>
 
       <AnimatePresence>
@@ -84,7 +85,7 @@ export const SpendWiseAI: React.FC = () => {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="fixed bottom-24 right-8 w-[450px] h-[600px] bg-white rounded-3xl shadow-2xl border border-slate-100 flex flex-col z-50 overflow-hidden"
+            className="fixed bottom-20 right-2 sm:bottom-24 sm:right-8 w-[calc(100vw-1rem)] sm:w-[450px] h-[75vh] sm:h-[600px] max-h-[600px] bg-white rounded-3xl shadow-2xl border border-slate-100 flex flex-col z-50 overflow-hidden"
           >
             {/* Header */}
             <div className="p-6 bg-indigo-600 text-white flex items-center justify-between">

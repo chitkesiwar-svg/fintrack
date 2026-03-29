@@ -11,20 +11,20 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip,
   BarChart, Bar, Cell, Pie
 } from 'recharts';
-import { cn, Transaction } from '../types';
-import { DUMMY_FAMILY } from '../constants';
+import { cn, Transaction, FamilyMember } from '../types';
 
 interface AnalyticsProps {
   transactions: Transaction[];
+  family: FamilyMember[];
 }
 
-export const Analytics: React.FC<AnalyticsProps> = ({ transactions }) => {
+export const Analytics: React.FC<AnalyticsProps> = ({ transactions, family }) => {
   const [timeframe, setTimeframe] = useState('Monthly');
   
   const totalTransactions = transactions.reduce((acc, t) => acc + t.amount, 0);
   const totalTransactionCount = transactions.length;
 
-  const familySpenders = DUMMY_FAMILY.map((member) => {
+  const familySpenders = (family.length > 0 ? family : [{ id: '0', name: 'You', email: '', role: 'Admin', avatar: 'https://ui-avatars.com/api/?name=You&background=random&color=fff' }]).map((member, idx, arr) => {
     const percentage = member.role === 'Admin' ? 65 : 35; 
     const amount = totalTransactions > 0 ? (totalTransactions * percentage) / 100 : 0;
     const count = totalTransactionCount > 0 ? Math.round((totalTransactionCount * percentage) / 100) : 0;
@@ -80,18 +80,18 @@ export const Analytics: React.FC<AnalyticsProps> = ({ transactions }) => {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800">Financial Analytics</h2>
-          <p className="text-slate-500 text-sm">Deep dive into your spending patterns and trends</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-800">Financial Analytics</h2>
+          <p className="text-slate-500 text-xs sm:text-sm">Deep dive into your spending patterns and trends</p>
         </div>
-        <div className="flex items-center bg-white p-1.5 rounded-2xl border border-slate-100 shadow-sm">
+        <div className="flex items-center bg-white p-1 sm:p-1.5 rounded-xl sm:rounded-2xl border border-slate-100 shadow-sm overflow-x-auto no-scrollbar w-full sm:w-auto">
           {['Daily', 'Weekly', 'Monthly', 'Yearly'].map((t) => (
             <button 
               key={t}
               onClick={() => setTimeframe(t)}
               className={cn(
-                "px-6 py-2.5 rounded-xl text-xs font-bold transition-all",
+                "px-3 sm:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap flex-1 sm:flex-none",
                 timeframe === t ? "bg-indigo-600 text-white shadow-lg shadow-indigo-100" : "text-slate-400 hover:text-slate-600"
               )}
             >
@@ -121,7 +121,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ transactions }) => {
                 <button className="p-2 hover:bg-slate-50 rounded-lg text-slate-400 ml-2"><Download className="w-4 h-4" /></button>
               </div>
             </div>
-            <div className="h-[350px] w-full">
+            <div className="h-[250px] sm:h-[350px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={activeData}>
                   <defs>
@@ -296,22 +296,22 @@ export const Analytics: React.FC<AnalyticsProps> = ({ transactions }) => {
 
               {/* Overview Cards */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="md:col-span-2 bg-gradient-to-br from-indigo-600 to-violet-700 p-8 rounded-[40px] text-white shadow-xl shadow-indigo-200 relative overflow-hidden">
+                  <div className="md:col-span-2 bg-gradient-to-br from-indigo-600 to-violet-700 p-5 sm:p-8 rounded-2xl sm:rounded-[40px] text-white shadow-xl shadow-indigo-200 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
-                  <div className="relative z-10 flex items-center gap-6">
-                    <img src={selectedUser.avatar} className="w-24 h-24 rounded-full border-4 border-white/20 shadow-2xl" alt={selectedUser.name} />
+                  <div className="relative z-10 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 text-center sm:text-left">
+                    <img src={selectedUser.avatar} className="w-16 h-16 sm:w-24 sm:h-24 rounded-full border-4 border-white/20 shadow-2xl" alt={selectedUser.name} />
                     <div>
-                      <h3 className="text-3xl font-bold mb-1">{selectedUser.name}</h3>
-                      <div className="flex items-center gap-3">
+                      <h3 className="text-xl sm:text-3xl font-bold mb-1">{selectedUser.name}</h3>
+                      <div className="flex items-center justify-center sm:justify-start gap-3 flex-wrap">
                         <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-medium backdrop-blur-md">{selectedUser.role}</span>
-                        <span className="text-indigo-100 text-sm">{selectedUser.email}</span>
+                        <span className="text-indigo-100 text-xs sm:text-sm">{selectedUser.email}</span>
                       </div>
                     </div>
                   </div>
-                  <div className="mt-8 grid grid-cols-2 gap-6 relative z-10 pt-8 border-t border-white/10">
+                  <div className="mt-6 sm:mt-8 grid grid-cols-2 gap-4 sm:gap-6 relative z-10 pt-6 sm:pt-8 border-t border-white/10">
                     <div>
-                      <p className="text-indigo-200 text-xs uppercase tracking-widest font-bold mb-1">Total Spending</p>
-                      <p className="text-3xl font-black">₹{selectedUser.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+                      <p className="text-indigo-200 text-[10px] sm:text-xs uppercase tracking-widest font-bold mb-1">Total Spending</p>
+                      <p className="text-xl sm:text-3xl font-black">₹{selectedUser.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
                     </div>
                     <div>
                       <p className="text-indigo-200 text-xs uppercase tracking-widest font-bold mb-1">Transactions</p>
@@ -346,10 +346,10 @@ export const Analytics: React.FC<AnalyticsProps> = ({ transactions }) => {
               </div>
 
               {/* Comparison Charts */}
-              <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm">
-                <div className="flex items-center justify-between mb-8">
-                  <h3 className="text-xl font-bold text-slate-800">
-                    {compareUser ? `Category Comparison: ${selectedUser.name} vs ${compareUser.name}` : `Category Breakdown: ${selectedUser.name}`}
+              <div className="bg-white p-5 sm:p-8 rounded-2xl sm:rounded-[40px] border border-slate-100 shadow-sm">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 gap-4">
+                  <h3 className="text-base sm:text-xl font-bold text-slate-800">
+                    {compareUser ? `${selectedUser.name} vs ${compareUser.name}` : `Category Breakdown: ${selectedUser.name}`}
                   </h3>
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
@@ -365,7 +365,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ transactions }) => {
                   </div>
                 </div>
 
-                <div className="h-[400px] w-full mt-4">
+                <div className="h-[280px] sm:h-[400px] w-full mt-4">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={[
                       { name: 'Food', User1: (8500 * selectedUser.percentage) / 100, User2: compareUser ? (8500 * compareUser.percentage) / 100 : 0 },
@@ -405,7 +405,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ transactions }) => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left">
+            <table className="w-full text-left min-w-[400px]">
               <thead>
                 <tr className="bg-slate-50/50 text-[10px] uppercase tracking-widest font-bold text-slate-400">
                   <th className="px-6 py-3">Merchant</th>

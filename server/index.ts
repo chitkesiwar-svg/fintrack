@@ -1,8 +1,10 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import db from './db.js';
+import { GoogleGenAI, Type } from '@google/genai';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,7 +13,7 @@ const app = express();
 const port = process.env.PORT || 3001;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 
 // Auth & Users
 app.post('/api/auth/login', (req, res) => {
@@ -159,6 +161,60 @@ app.post('/api/settings', (req: any, res) => {
     db.prepare('INSERT OR REPLACE INTO settings (key, user_id, value) VALUES (?, ?, ?)').run(key, req.userId, value.toString());
     res.status(200).json({ success: true });
   } catch (error) { res.status(500).json({ error: 'Error' }); }
+});
+
+// Receipt Scanning via Gemini API (server-side to keep API key secure)
+app.post('/api/scan-receipt', async (req, res) => {
+  try {
+    const { imageData, mimeType, categories } = req.body;
+    if (!imageData || !mimeType) {
+      return res.status(400).json({ error: 'Missing imageData or mimeType' });
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ error: 'GEMINI_API_KEY not configured on the server' });
+    }
+
+    const ai = new GoogleGenAI({ apiKey });
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.0-flash',
+      contents: [
+        {
+          parts: [
+            {
+              inlineData: {
+                data: imageData,
+                mimeType,
+              },
+            },
+            {
+              text: `Extract the merchant name, total amount (as a number), date (in YYYY-MM-DD format), and the most appropriate category from this receipt. Categories available: ${(categories || []).join(', ')}`,
+            },
+          ],
+        },
+      ],
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            merchant: { type: Type.STRING },
+            amount: { type: Type.NUMBER },
+            date: { type: Type.STRING },
+            category: { type: Type.STRING },
+          },
+          required: ['merchant', 'amount', 'date', 'category'],
+        },
+      },
+    });
+
+    const result = JSON.parse(response.text || '{}');
+    res.json(result);
+  } catch (error: any) {
+    console.error('Error scanning receipt:', error?.message || error);
+    res.status(500).json({ error: 'Failed to scan receipt' });
+  }
 });
 
 // Serve production build of Vite React app

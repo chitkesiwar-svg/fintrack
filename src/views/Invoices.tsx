@@ -71,22 +71,23 @@ export const Invoices: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800">Invoices & Receipts</h2>
-          <p className="text-slate-500 text-sm">Access all your scanned documents in one place</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-800">Invoices & Receipts</h2>
+          <p className="text-slate-500 text-xs sm:text-sm">Access all your scanned documents in one place</p>
         </div>
-        <div className="flex items-center gap-3">
-          <button onClick={exportAll} className="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-50 transition-all flex items-center gap-2">
+        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+          <button onClick={exportAll} className="flex-1 sm:flex-none px-4 sm:px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-50 transition-all flex items-center justify-center gap-2 text-sm">
             <Download className="w-4 h-4" />
-            Export All
+            <span className="hidden sm:inline">Export All</span>
+            <span className="sm:hidden">Export</span>
           </button>
           <button 
             onClick={() => {
               const newInv = { id: `INV-${String(invoices.length + 1).padStart(3, '0')}`, merchant: 'New Entry', date: new Date().toISOString().split('T')[0], amount: 0, type: 'Receipt', file: null };
               setInvoices([newInv, ...invoices]);
             }}
-            className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-100 hover:scale-105 transition-all flex items-center gap-2"
+            className="flex-1 sm:flex-none px-4 sm:px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-100 hover:scale-105 transition-all flex items-center justify-center gap-2 text-sm"
           >
             <Plus className="w-4 h-4" />
             Upload New
@@ -96,8 +97,8 @@ export const Invoices: React.FC = () => {
 
       <input type="file" ref={fileInputRef} className="hidden" accept="image/*,.pdf" onChange={handleFileUpload} />
 
-      <div className="bg-white rounded-[40px] border border-slate-100 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="bg-white rounded-2xl sm:rounded-[40px] border border-slate-100 shadow-sm overflow-hidden">
+        <div className="p-4 sm:p-6 border-b border-slate-50">
           <div className="relative w-full sm:w-96">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input 
@@ -109,22 +110,90 @@ export const Invoices: React.FC = () => {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
+        {/* Mobile Card Layout */}
+        <div className="md:hidden divide-y divide-slate-50">
+          {filtered.map((inv) => (
+            <div key={inv.id} className="p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+                    <FileText className="w-4 h-4" />
+                  </div>
+                  <div>
+                    {editingId === inv.id ? (
+                      <div className="flex items-center gap-2">
+                        <input value={editIdValue} onChange={e => setEditIdValue(e.target.value)}
+                          className="w-24 px-2 py-1 text-xs border border-indigo-200 rounded-lg outline-none font-mono" autoFocus />
+                        <button onClick={() => saveEditId(inv.id)} className="text-emerald-500"><Save className="w-3 h-3" /></button>
+                        <button onClick={() => setEditingId(null)} className="text-slate-400"><X className="w-3 h-3" /></button>
+                      </div>
+                    ) : (
+                      <span className="text-xs font-bold text-slate-800 font-mono">{inv.id}</span>
+                    )}
+                    <p className="text-sm font-medium text-slate-600">{inv.merchant}</p>
+                  </div>
+                </div>
+                <div className="relative">
+                  <button 
+                    onClick={() => setOpenMenu(openMenu === inv.id ? null : inv.id)}
+                    className="p-2 text-slate-300 hover:text-slate-600"
+                  >
+                    <MoreVertical className="w-4 h-4" />
+                  </button>
+                  <AnimatePresence>
+                    {openMenu === inv.id && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }}
+                        className="absolute right-0 top-10 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden z-20 w-36"
+                      >
+                        <button onClick={() => handleEditId(inv.id)}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-600 hover:bg-slate-50"
+                        ><Edit2 className="w-4 h-4" /> Edit ID</button>
+                        <button onClick={() => handleDelete(inv.id)}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-sm text-rose-500 hover:bg-rose-50"
+                        ><Trash2 className="w-4 h-4" /> Delete</button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
+              <div className="flex items-center justify-between pl-12">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-slate-400">{inv.date}</span>
+                  <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded uppercase">{inv.type}</span>
+                </div>
+                <span className="text-sm font-bold text-slate-800">₹{inv.amount.toLocaleString()}</span>
+              </div>
+              <div className="flex items-center gap-2 pl-12">
+                <button 
+                  onClick={() => { setUploadTarget(inv.id); fileInputRef.current?.click(); }}
+                  className="p-1.5 text-slate-400 hover:text-indigo-600 transition-all"
+                ><Upload className="w-3.5 h-3.5" /></button>
+                {inv.file && <button onClick={() => downloadFile(inv)}
+                  className="p-1.5 text-slate-400 hover:text-emerald-600 transition-all"
+                ><Download className="w-3.5 h-3.5" /></button>}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop Table Layout */}
+        <div className="overflow-x-auto hidden md:block">
+          <table className="w-full text-left min-w-[600px]">
             <thead>
               <tr className="bg-slate-50/50 text-[10px] uppercase tracking-widest font-bold text-slate-400">
-                <th className="px-8 py-5">Document ID</th>
-                <th className="px-8 py-5">Merchant</th>
-                <th className="px-8 py-5">Date</th>
-                <th className="px-8 py-5">Type</th>
-                <th className="px-8 py-5">Amount</th>
-                <th className="px-8 py-5">Actions</th>
+                <th className="px-6 lg:px-8 py-5">Document ID</th>
+                <th className="px-6 lg:px-8 py-5">Merchant</th>
+                <th className="px-6 lg:px-8 py-5">Date</th>
+                <th className="px-6 lg:px-8 py-5">Type</th>
+                <th className="px-6 lg:px-8 py-5">Amount</th>
+                <th className="px-6 lg:px-8 py-5">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {filtered.map((inv) => (
                 <tr key={inv.id} className="group hover:bg-slate-50/50 transition-colors">
-                  <td className="px-8 py-6">
+                  <td className="px-6 lg:px-8 py-5">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
                         <FileText className="w-5 h-5" />
@@ -148,13 +217,13 @@ export const Invoices: React.FC = () => {
                       )}
                     </div>
                   </td>
-                  <td className="px-8 py-6 text-sm font-medium text-slate-600">{inv.merchant}</td>
-                  <td className="px-8 py-6 text-sm text-slate-400">{inv.date}</td>
-                  <td className="px-8 py-6">
+                  <td className="px-6 lg:px-8 py-5 text-sm font-medium text-slate-600">{inv.merchant}</td>
+                  <td className="px-6 lg:px-8 py-5 text-sm text-slate-400">{inv.date}</td>
+                  <td className="px-6 lg:px-8 py-5">
                     <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md uppercase tracking-wider">{inv.type}</span>
                   </td>
-                  <td className="px-8 py-6 text-sm font-bold text-slate-800">₹{inv.amount.toLocaleString()}</td>
-                  <td className="px-8 py-6">
+                  <td className="px-6 lg:px-8 py-5 text-sm font-bold text-slate-800">₹{inv.amount.toLocaleString()}</td>
+                  <td className="px-6 lg:px-8 py-5">
                     <div className="flex items-center gap-2 relative">
                       <button 
                         onClick={() => { setUploadTarget(inv.id); fileInputRef.current?.click(); }}
@@ -209,8 +278,8 @@ export const Invoices: React.FC = () => {
           </table>
         </div>
 
-        <div className="p-8 bg-slate-50/50 border-t border-slate-50 flex items-center justify-between">
-          <p className="text-sm text-slate-400 font-medium">Showing {filtered.length} of {invoices.length} documents</p>
+        <div className="p-4 sm:p-8 bg-slate-50/50 border-t border-slate-50 flex items-center justify-between">
+          <p className="text-xs sm:text-sm text-slate-400 font-medium">Showing {filtered.length} of {invoices.length} documents</p>
         </div>
       </div>
     </div>

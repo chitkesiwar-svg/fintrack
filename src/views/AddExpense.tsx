@@ -7,7 +7,6 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn, Transaction } from '../types';
-import { GoogleGenAI, Type } from "@google/genai";
 
 interface AddExpenseProps {
   categories: string[];
@@ -41,40 +40,23 @@ export const AddExpense: React.FC<AddExpenseProps> = ({ categories, onAddExpense
         reader.readAsDataURL(file);
       });
 
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: [
-          {
-            parts: [
-              {
-                inlineData: {
-                  data: base64Data,
-                  mimeType: file.type,
-                },
-              },
-              {
-                text: "Extract the merchant name, total amount, date (in YYYY-MM-DD format), and the most appropriate category from this receipt. Categories available: " + categories.join(", "),
-              },
-            ],
-          },
-        ],
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              merchant: { type: Type.STRING },
-              amount: { type: Type.NUMBER },
-              date: { type: Type.STRING },
-              category: { type: Type.STRING },
-            },
-            required: ["merchant", "amount", "date", "category"],
-          },
-        },
+      // Call server-side scanning endpoint
+      const response = await fetch('/api/scan-receipt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imageData: base64Data,
+          mimeType: file.type,
+          categories,
+        }),
       });
 
-      const result = JSON.parse(response.text);
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || 'Scan failed');
+      }
+
+      const result = await response.json();
       
       if (result.merchant) setMerchant(result.merchant);
       if (result.amount) setAmount(result.amount.toString());
@@ -333,9 +315,9 @@ export const AddExpense: React.FC<AddExpenseProps> = ({ categories, onAddExpense
         </form>
       </motion.div>
 
-      <div className="mt-8 p-6 bg-indigo-50 rounded-3xl flex items-center gap-4">
-        <Sparkles className="w-6 h-6 text-indigo-600" />
-        <p className="text-sm text-indigo-700 font-medium">
+      <div className="mt-6 sm:mt-8 p-4 sm:p-6 bg-indigo-50 rounded-2xl sm:rounded-3xl flex items-start sm:items-center gap-3 sm:gap-4">
+        <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 flex-shrink-0 mt-0.5 sm:mt-0" />
+        <p className="text-xs sm:text-sm text-indigo-700 font-medium">
           Want to save time? Use the <span className="font-bold underline cursor-pointer">Smart Upload</span> feature to scan receipts automatically.
         </p>
       </div>

@@ -13,9 +13,9 @@ import { LandingPage } from './views/LandingPage';
 import { Onboarding } from './views/Onboarding';
 import { SpendWiseAI } from './components/SpendWiseAI';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus } from 'lucide-react';
-import { DUMMY_TRANSACTIONS, CATEGORIES } from './constants';
-import { Transaction, IncomeSource } from './types';
+import { Plus, Sparkles } from 'lucide-react';
+import { DUMMY_TRANSACTIONS, CATEGORIES, DUMMY_FAMILY } from './constants';
+import { Transaction, IncomeSource, FamilyMember } from './types';
 
 const DEFAULT_USER = {
   id: 'user_default_local',
@@ -40,6 +40,14 @@ export default function App() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [incomeSources, setIncomeSources] = useState<IncomeSource[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [family, setFamily] = useState<FamilyMember[]>([]);
+
+  useEffect(() => {
+    fetch('/api/admin/users')
+      .then(res => res.json())
+      .then(data => { if (Array.isArray(data) && data.length > 0) setFamily(data); else setFamily(DUMMY_FAMILY); })
+      .catch(() => setFamily(DUMMY_FAMILY));
+  }, []);
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -171,6 +179,9 @@ export default function App() {
             incomeSources={incomeSources}
             setIncomeSources={setIncomeSources}
             onViewTransactions={() => setActiveTab('transactions')}
+            user={user}
+            family={family}
+            setFamily={setFamily}
           />
         );
       case 'transactions':
@@ -178,7 +189,7 @@ export default function App() {
       case 'accounts':
         return <Accounts />;
       case 'analytics':
-        return <Analytics transactions={transactions} />;
+        return <Analytics transactions={transactions} family={family} />;
       case 'add-expense':
         return <AddExpense categories={categories} onAddExpense={addTransaction} onDone={() => setActiveTab('home')} />;
       case 'budget-categories':
@@ -230,15 +241,15 @@ export default function App() {
         </div>
       </main>
 
-      <div className="fixed bottom-6 right-6 flex items-center gap-3 z-40">
+      <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 flex items-center gap-2 sm:gap-3 z-40">
+        <SpendWiseAI />
         <button
           onClick={() => setActiveTab('add-expense')}
-          className="w-14 h-14 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white rounded-full flex items-center justify-center shadow-lg shadow-indigo-200 transition-all group"
+          className="w-12 h-12 sm:w-14 sm:h-14 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white rounded-full flex items-center justify-center shadow-lg shadow-indigo-200 transition-all group"
           title="Quick Add Expense"
         >
-          <Plus className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
+          <Plus className="w-5 h-5 sm:w-6 sm:h-6 group-hover:rotate-90 transition-transform duration-300" />
         </button>
-        <SpendWiseAI />
       </div>
 
       <style>{`

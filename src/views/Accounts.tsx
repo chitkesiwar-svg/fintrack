@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Mail, Phone, Shield, Search, ArrowRight, CreditCard, Plus, X, Save } from 'lucide-react';
+import { Users, Mail, Phone, Shield, Search, CreditCard, Plus, X, Save } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../types';
 
@@ -225,8 +225,8 @@ export const Accounts: React.FC = () => {
             initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden"
           >
-            <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-slate-50">
+            <div className="bg-white rounded-2xl sm:rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
+              <div className="p-4 sm:p-6 border-b border-slate-50">
                 <h3 className="font-bold text-slate-800">All Cards</h3>
                 <p className="text-xs text-slate-400 mt-1">Manage card status and view details</p>
               </div>
@@ -235,7 +235,8 @@ export const Accounts: React.FC = () => {
                   <motion.div 
                     key={card.id}
                     initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.05 }}
-                    className="flex items-center justify-between p-5 hover:bg-slate-50/50 transition-colors"
+                    onClick={() => openCardModal(card)}
+                    className="flex items-center justify-between p-3 sm:p-5 hover:bg-slate-50/50 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-4">
                       <div className={cn("w-12 h-8 rounded-lg bg-gradient-to-br flex items-center justify-center", card.gradient)}>
@@ -256,7 +257,7 @@ export const Accounts: React.FC = () => {
                     <div className="flex items-center gap-6">
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden sm:block">{card.type}</span>
                       <button
-                        onClick={() => toggleCardStatus(card.id)}
+                        onClick={(e) => { e.stopPropagation(); toggleCardStatus(card.id); }}
                         className={cn(
                           "px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all",
                           (card.status || 'Active') === 'Active' 
@@ -265,9 +266,6 @@ export const Accounts: React.FC = () => {
                         )}
                       >
                         {card.status || 'Active'}
-                      </button>
-                      <button onClick={() => openCardModal(card)} className="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
-                        <ArrowRight className="w-4 h-4" />
                       </button>
                     </div>
                   </motion.div>
@@ -291,7 +289,7 @@ export const Accounts: React.FC = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-md bg-white rounded-[40px] shadow-2xl p-8 overflow-hidden z-10"
+              className="relative w-full max-w-md bg-white rounded-2xl sm:rounded-[40px] shadow-2xl p-5 sm:p-8 overflow-hidden overflow-y-auto max-h-[90vh] z-10"
             >
               <button 
                 onClick={() => setIsModalOpen(false)}

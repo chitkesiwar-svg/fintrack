@@ -54,14 +54,14 @@ export const SavingsGoals: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800">Savings Goals</h2>
-          <p className="text-slate-500 text-sm">Track your progress towards your big dreams</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-800">Savings Goals</h2>
+          <p className="text-slate-500 text-xs sm:text-sm">Track your progress towards your big dreams</p>
         </div>
         <button 
           onClick={() => setShowModal(true)}
-          className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-100 hover:scale-105 transition-all flex items-center gap-2"
+          className="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-100 hover:scale-105 transition-all flex items-center justify-center gap-2"
         >
           <Plus className="w-5 h-5" />
           Create Goal
@@ -74,7 +74,7 @@ export const SavingsGoals: React.FC = () => {
           const Icon = goalIcons[goal.icon] || Target;
 
           return (
-            <div key={goal.id} className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden group">
+            <div key={goal.id} className="bg-white p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden group">
               <div className="relative z-10 space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">

@@ -57,31 +57,34 @@ export const Transactions: React.FC<{ transactions: Transaction[] }> = ({ transa
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.02 }}
-                  className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between group"
+                  className="p-3 sm:p-4 hover:bg-slate-50 transition-colors flex items-center justify-between gap-3 group"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm ${
+                  <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                    <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex-shrink-0 flex items-center justify-center shadow-sm ${
                       isIncome ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
                     }`}>
-                      {isIncome ? <ArrowUpRight className="w-6 h-6" /> : <ArrowDownRight className="w-6 h-6" />}
+                      {isIncome ? <ArrowUpRight className="w-5 h-5 sm:w-6 sm:h-6" /> : <ArrowDownRight className="w-5 h-5 sm:w-6 sm:h-6" />}
                     </div>
-                    <div>
-                      <p className="font-bold text-slate-800">{t.merchant}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md font-medium">
+                    <div className="min-w-0">
+                      <p className="font-bold text-slate-800 text-sm sm:text-base truncate">{t.merchant}</p>
+                      <div className="flex items-center gap-2 mt-0.5 sm:mt-1 flex-wrap">
+                        <span className="text-[10px] sm:text-xs px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md font-medium">
                           {t.category}
                         </span>
-                        <span className="text-xs text-slate-400">
+                        <span className="text-[10px] sm:text-xs text-slate-400 hidden sm:inline">
                           • {format(date, 'MMM d, yyyy \u2022 h:mm a')}
+                        </span>
+                        <span className="text-[10px] text-slate-400 sm:hidden">
+                          {format(date, 'MMM d')}
                         </span>
                       </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className={`font-bold text-lg ${isIncome ? 'text-emerald-600' : 'text-slate-800'}`}>
+                  <div className="text-right flex-shrink-0">
+                    <p className={`font-bold text-sm sm:text-lg ${isIncome ? 'text-emerald-600' : 'text-slate-800'}`}>
                       {isIncome ? '+' : '-'}₹{displayAmount.toLocaleString()}
                     </p>
-                    <p className="text-xs text-slate-400 mt-1 capitalize">{t.paymentMethod} • {t.status}</p>
+                    <p className="text-[10px] sm:text-xs text-slate-400 mt-0.5 sm:mt-1 capitalize hidden sm:block">{t.paymentMethod} • {t.status}</p>
                   </div>
                 </motion.div>
               );

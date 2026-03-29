@@ -8,7 +8,7 @@ import {
   BookOpen, MoreHorizontal, Calendar, User, Mail, Phone
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { DUMMY_TRANSACTIONS, DUMMY_SUBSCRIPTIONS, DUMMY_FAMILY, DUMMY_EMIS } from '../constants';
+import { DUMMY_TRANSACTIONS, DUMMY_SUBSCRIPTIONS, DUMMY_EMIS } from '../constants';
 import { Subscription, Transaction, FamilyMember, IncomeSource, EMI } from '../types';
 import { CategoryPieChart, IncomeVsExpenseChart } from '../components/Charts';
 import { cn } from '../types';
@@ -19,6 +19,9 @@ interface DashboardProps {
   incomeSources: IncomeSource[];
   setIncomeSources: React.Dispatch<React.SetStateAction<IncomeSource[]>>;
   onViewTransactions: () => void;
+  user?: any;
+  family: FamilyMember[];
+  setFamily: React.Dispatch<React.SetStateAction<FamilyMember[]>>;
 }
 
 // Sub-components for Modals to prevent full Dashboard re-renders
@@ -189,11 +192,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
   setTransactions,
   incomeSources,
   setIncomeSources,
-  onViewTransactions
+  onViewTransactions,
+  user,
+  family,
+  setFamily
 }) => {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [emis, setEmis] = useState<EMI[]>([]);
-  const [family, setFamily] = useState<FamilyMember[]>(DUMMY_FAMILY);
   const [savingsTarget, setSavingsTarget] = useState(45000);
 
   React.useEffect(() => {
@@ -247,11 +252,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
     setTransactionToDelete(null);
   };
 
-  const deleteFamilyMember = (id: string) => {
+  const deleteFamilyMember = async (id: string) => {
     if (family.length <= 1) {
       alert("You must have at least one family member.");
       return;
     }
+    try { await fetch(`/api/admin/users/${id}`, { method: 'DELETE' }); } catch (e) { console.error(e); }
     setFamily(prev => prev.filter(m => m.id !== id));
   };
 
@@ -282,15 +288,20 @@ export const Dashboard: React.FC<DashboardProps> = ({
     return colors[category] || 'bg-slate-500';
   };
 
-  const handleFamilySubmit = (e: React.FormEvent) => {
+  const handleFamilySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newMemberName && newMemberEmail) {
       if (editingMemberId) {
-        setFamily(prev => prev.map(m => 
+        const updated = family.map(m => 
           m.id === editingMemberId 
             ? { ...m, name: newMemberName, email: newMemberEmail, phone: newMemberPhone } 
             : m
-        ));
+        );
+        setFamily(updated);
+        const member = updated.find(m => m.id === editingMemberId);
+        if (member) {
+          try { await fetch('/api/admin/users', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(member) }); } catch (e) { console.error(e); }
+        }
       } else {
         const newMember: FamilyMember = {
           id: Math.random().toString(36).substr(2, 9),
@@ -301,6 +312,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           avatar: `https://picsum.photos/seed/${newMemberName}/100/100`
         };
         setFamily([...family, newMember]);
+        try { await fetch('/api/admin/users', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newMember) }); } catch (e) { console.error(e); }
       }
       resetFamilyForm();
     }
@@ -449,6 +461,22 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <div className="space-y-8 pb-12">
+      {/* Profile Card */}
+      {user && (
+        <div className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm flex flex-col sm:flex-row items-center gap-3 sm:gap-5 text-center sm:text-left">
+          <img 
+            src={user.avatar || 'https://ui-avatars.com/api/?name=User&background=random&color=fff'}
+            alt={user.name}
+            className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 border-indigo-100 shadow-sm"
+          />
+          <div className="flex-1 min-w-0">
+            <h2 className="text-lg sm:text-xl font-bold text-slate-800 truncate">{user.name || 'User'}</h2>
+            <p className="text-xs sm:text-sm text-slate-400 truncate">{user.email || ''}</p>
+          </div>
+          <span className="text-[10px] font-bold px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-600 uppercase tracking-wider">{user.role || 'Member'}</span>
+        </div>
+      )}
+
       {/* Top Summary Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div 

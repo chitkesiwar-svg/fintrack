@@ -91,14 +91,14 @@ export const Categories: React.FC<CategoriesProps> = ({ categories, setCategorie
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800">Budget & Categories</h2>
-          <p className="text-slate-500 text-sm">Manage your spending categories and limits</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-800">Budget & Categories</h2>
+          <p className="text-slate-500 text-xs sm:text-sm">Manage your spending categories and limits</p>
         </div>
         <button 
           onClick={() => setIsAddingCategory(true)}
-          className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-100 hover:scale-105 transition-all flex items-center gap-2"
+          className="w-full sm:w-auto px-5 sm:px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-100 hover:scale-105 transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
         >
           <Plus className="w-5 h-5" />
           Add New Category
