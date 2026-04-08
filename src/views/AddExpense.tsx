@@ -3,7 +3,7 @@ import {
   IndianRupee, Tag, Store, Calendar, 
   CreditCard, FileText, X, 
   ChevronDown, Check, Sparkles, Upload,
-  Loader2
+  Loader2, CheckCircle2, AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn, Transaction } from '../types';
@@ -24,10 +24,14 @@ export const AddExpense: React.FC<AddExpenseProps> = ({ categories, onAddExpense
   const [notes, setNotes] = useState('');
   const [fileName, setFileName] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
+  const [scanComplete, setScanComplete] = useState(false);
+  const [scanError, setScanError] = useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const scanReceipt = async (file: File) => {
     setIsScanning(true);
+    setScanComplete(false);
+    setScanError(null);
     
     try {
       // Convert file to base64
@@ -46,7 +50,7 @@ export const AddExpense: React.FC<AddExpenseProps> = ({ categories, onAddExpense
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           imageData: base64Data,
-          mimeType: file.type,
+          mimeType: file.type || 'application/pdf',
           categories,
         }),
       });
@@ -63,11 +67,13 @@ export const AddExpense: React.FC<AddExpenseProps> = ({ categories, onAddExpense
       if (result.date) setDate(result.date);
       if (result.category && categories.includes(result.category)) {
         setCategory(result.category);
-      } else {
+      } else if (result.category) {
         setCategory('Other');
       }
-    } catch (error) {
+      setScanComplete(true);
+    } catch (error: any) {
       console.error("Error scanning receipt:", error);
+      setScanError(error?.message || 'Failed to extract details');
     } finally {
       setIsScanning(false);
     }
@@ -77,6 +83,8 @@ export const AddExpense: React.FC<AddExpenseProps> = ({ categories, onAddExpense
     const file = e.target.files?.[0];
     if (file) {
       setFileName(file.name);
+      setScanComplete(false);
+      setScanError(null);
       scanReceipt(file);
     }
   };
@@ -97,27 +105,60 @@ export const AddExpense: React.FC<AddExpenseProps> = ({ categories, onAddExpense
     onDone();
   };
 
+  // Whether fields were auto-filled by scanning
+  const isSmartFilled = fileName && !isScanning && scanComplete;
+
   return (
     <div className="max-w-2xl mx-auto">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-[24px] sm:rounded-[40px] border border-slate-100 shadow-2xl overflow-hidden"
+        className="bg-white rounded-[24px] sm:rounded-[32px] border border-slate-100 shadow-xl overflow-hidden"
       >
-        <div className="p-6 sm:p-8 bg-indigo-600 text-white">
-          <h2 className="text-2xl font-bold">Add New Expense</h2>
-          <p className="text-indigo-100 text-sm">Keep your spending tracked and organized</p>
+        <div className="px-6 sm:px-8 py-5 sm:py-6 bg-indigo-600 text-white">
+          <h2 className="text-xl font-bold">Add New Expense</h2>
+          <p className="text-indigo-200 text-xs mt-0.5">Keep your spending tracked and organized</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 sm:p-10 space-y-6 sm:space-y-8">
-          {/* Amount Input */}
-          <div className="space-y-2">
+        <form onSubmit={handleSubmit} className="p-5 sm:p-8 space-y-5">
+          {/* Scan confirmation banner */}
+          <AnimatePresence>
+            {isSmartFilled && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="flex items-center gap-3 px-4 py-3 bg-emerald-50 border border-emerald-100 rounded-xl">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                  <p className="text-xs font-semibold text-emerald-700">Details auto-filled from receipt. Review and edit before saving.</p>
+                </div>
+              </motion.div>
+            )}
+            {scanError && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="flex items-center gap-3 px-4 py-3 bg-rose-50 border border-rose-100 rounded-xl">
+                  <AlertCircle className="w-4 h-4 text-rose-500 flex-shrink-0" />
+                  <p className="text-xs font-semibold text-rose-700">{scanError}. Please fill fields manually.</p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Amount Input — compact */}
+          <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Amount</label>
-              {fileName && !isScanning && (
+              {isSmartFilled && (
                 <motion.span 
-                  initial={{ opacity: 0, x: 10 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
                   className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-bold flex items-center gap-1"
                 >
                   <Sparkles className="w-3 h-3" /> Smart Scanned
@@ -125,33 +166,39 @@ export const AddExpense: React.FC<AddExpenseProps> = ({ categories, onAddExpense
               )}
             </div>
             <div className="relative">
-              <span className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl sm:text-3xl font-bold text-slate-300">₹</span>
+              <span className="absolute left-5 top-1/2 -translate-y-1/2 text-lg font-bold text-slate-300">₹</span>
               <input 
                 type="number" 
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
-                className="w-full bg-slate-50 border-none rounded-3xl pl-12 pr-6 py-4 sm:py-6 text-2xl sm:text-4xl font-bold text-slate-800 focus:ring-4 focus:ring-indigo-50 transition-all outline-none placeholder:text-slate-200"
+                className={cn(
+                  "w-full bg-slate-50 border rounded-2xl pl-10 pr-5 py-3.5 text-xl font-bold text-slate-800 focus:ring-2 focus:ring-indigo-100 transition-all outline-none placeholder:text-slate-200",
+                  isSmartFilled ? "border-indigo-200 bg-indigo-50/30 ring-2 ring-indigo-100" : "border-transparent"
+                )}
                 required
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Category Dropdown */}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Category</label>
               <div className="relative">
                 <select 
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full bg-slate-50 border-none rounded-2xl px-5 py-4 text-sm font-medium text-slate-700 focus:ring-4 focus:ring-indigo-50 transition-all outline-none appearance-none"
+                  className={cn(
+                    "w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-100 transition-all outline-none appearance-none",
+                    isSmartFilled ? "border-indigo-200 bg-indigo-50/30" : "border-transparent"
+                  )}
                 >
                   {categories.map(cat => (
                     <option key={cat} value={cat}>{cat}</option>
                   ))}
                 </select>
-                <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
               </div>
               {category === 'Custom' && (
                 <motion.input 
@@ -161,19 +208,19 @@ export const AddExpense: React.FC<AddExpenseProps> = ({ categories, onAddExpense
                   placeholder="Enter custom category"
                   value={customCategory}
                   onChange={(e) => setCustomCategory(e.target.value)}
-                  className="w-full mt-2 bg-slate-50 border border-indigo-100 rounded-2xl px-5 py-3 text-sm focus:ring-2 focus:ring-indigo-100 outline-none"
+                  className="w-full mt-1.5 bg-slate-50 border border-indigo-100 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-100 outline-none"
                 />
               )}
             </div>
 
             {/* Merchant Input */}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Merchant</label>
-                {fileName && !isScanning && (
+                {isSmartFilled && (
                   <motion.span 
-                    initial={{ opacity: 0, x: 10 }}
-                    animate={{ opacity: 1, x: 0 }}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
                     className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-bold flex items-center gap-1"
                   >
                     <Sparkles className="w-3 h-3" /> Smart Scanned
@@ -181,42 +228,48 @@ export const AddExpense: React.FC<AddExpenseProps> = ({ categories, onAddExpense
                 )}
               </div>
               <div className="relative">
-                <Store className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Store className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input 
                   type="text" 
                   value={merchant}
                   onChange={(e) => setMerchant(e.target.value)}
                   placeholder="e.g. Amazon, Starbucks"
-                  className="w-full bg-slate-50 border-none rounded-2xl pl-12 pr-5 py-4 text-sm font-medium text-slate-700 focus:ring-4 focus:ring-indigo-50 transition-all outline-none"
+                  className={cn(
+                    "w-full bg-slate-50 border rounded-xl pl-11 pr-4 py-3 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-100 transition-all outline-none",
+                    isSmartFilled ? "border-indigo-200 bg-indigo-50/30" : "border-transparent"
+                  )}
                   required
                 />
               </div>
             </div>
 
             {/* Date Input */}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Date</label>
               <div className="relative">
-                <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input 
                   type="date" 
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full bg-slate-50 border-none rounded-2xl pl-12 pr-5 py-4 text-sm font-medium text-slate-700 focus:ring-4 focus:ring-indigo-50 transition-all outline-none"
+                  className={cn(
+                    "w-full bg-slate-50 border rounded-xl pl-11 pr-4 py-3 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-100 transition-all outline-none",
+                    isSmartFilled ? "border-indigo-200 bg-indigo-50/30" : "border-transparent"
+                  )}
                   required
                 />
               </div>
             </div>
 
             {/* Payment Method */}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Payment Method</label>
               <div className="relative">
-                <CreditCard className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <select 
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="w-full bg-slate-50 border-none rounded-2xl pl-12 pr-5 py-4 text-sm font-medium text-slate-700 focus:ring-4 focus:ring-indigo-50 transition-all outline-none appearance-none"
+                  className="w-full bg-slate-50 border-transparent border rounded-xl pl-11 pr-4 py-3 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-100 transition-all outline-none appearance-none"
                 >
                   <option>Credit Card</option>
                   <option>Debit Card</option>
@@ -224,35 +277,29 @@ export const AddExpense: React.FC<AddExpenseProps> = ({ categories, onAddExpense
                   <option>Cash</option>
                   <option>Net Banking</option>
                 </select>
-                <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
               </div>
             </div>
           </div>
 
           {/* Notes */}
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Notes (Optional)</label>
             <div className="relative">
-              <FileText className="absolute left-5 top-5 w-4 h-4 text-slate-400" />
+              <FileText className="absolute left-4 top-4 w-4 h-4 text-slate-400" />
               <textarea 
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="What was this for?"
-                rows={3}
-                className="w-full bg-slate-50 border-none rounded-2xl pl-12 pr-5 py-4 text-sm font-medium text-slate-700 focus:ring-4 focus:ring-indigo-50 transition-all outline-none resize-none"
+                rows={2}
+                className="w-full bg-slate-50 border border-transparent rounded-xl pl-11 pr-4 py-3 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-100 transition-all outline-none resize-none"
               />
             </div>
           </div>
 
-          {/* Receipt Upload */}
-          <div 
-            onClick={() => !isScanning && fileInputRef.current?.click()}
-            className={cn(
-              "p-6 border-2 border-dashed rounded-3xl flex flex-col items-center justify-center gap-2 transition-all cursor-pointer group",
-              isScanning ? "border-indigo-200 bg-indigo-50/50 cursor-wait" : 
-              fileName ? "border-emerald-200 bg-emerald-50" : "border-slate-100 hover:bg-slate-50"
-            )}
-          >
+          {/* Receipt Upload — compact & elegant */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Receipt / Invoice</label>
             <input 
               type="file" 
               ref={fileInputRef} 
@@ -261,66 +308,115 @@ export const AddExpense: React.FC<AddExpenseProps> = ({ categories, onAddExpense
               accept="image/*,.pdf"
               disabled={isScanning}
             />
+
             {isScanning ? (
-              <>
+              /* Scanning state */
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex items-center gap-3 px-4 py-3 bg-indigo-50 border border-indigo-100 rounded-xl"
+              >
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
                 >
-                  <Loader2 className="w-6 h-6 text-indigo-600" />
+                  <Loader2 className="w-4 h-4 text-indigo-600" />
                 </motion.div>
-                <span className="text-xs font-bold text-indigo-600 animate-pulse">AI Extracting Details...</span>
-              </>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-indigo-700 truncate">{fileName}</p>
+                  <p className="text-[10px] text-indigo-500 animate-pulse">AI extracting details...</p>
+                </div>
+              </motion.div>
             ) : fileName ? (
-              <>
-                <Check className="w-6 h-6 text-emerald-500" />
-                <span className="text-xs font-bold text-emerald-600">{fileName}</span>
+              /* File uploaded state */
+              <motion.div 
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-3 rounded-xl border",
+                  scanComplete 
+                    ? "bg-emerald-50/50 border-emerald-200" 
+                    : scanError 
+                      ? "bg-rose-50/50 border-rose-200"
+                      : "bg-slate-50 border-slate-200"
+                )}
+              >
+                <div className={cn(
+                  "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0",
+                  scanComplete ? "bg-emerald-100" : scanError ? "bg-rose-100" : "bg-slate-100"
+                )}>
+                  {scanComplete ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  ) : scanError ? (
+                    <AlertCircle className="w-4 h-4 text-rose-500" />
+                  ) : (
+                    <FileText className="w-4 h-4 text-slate-500" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-slate-700 truncate">{fileName}</p>
+                  <p className={cn(
+                    "text-[10px] font-medium",
+                    scanComplete ? "text-emerald-600" : scanError ? "text-rose-500" : "text-slate-400"
+                  )}>
+                    {scanComplete ? "Scan Completed ✅" : scanError ? "Scan failed" : "Uploaded"}
+                  </p>
+                </div>
                 <button 
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     setFileName(null);
+                    setScanComplete(false);
+                    setScanError(null);
+                    setMerchant('');
+                    setAmount('');
+                    if (fileInputRef.current) fileInputRef.current.value = '';
                   }}
-                  className="text-[10px] text-rose-500 font-bold hover:underline"
+                  className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-rose-500 transition-colors flex-shrink-0"
                 >
-                  Remove
+                  <X className="w-3.5 h-3.5" />
                 </button>
-              </>
+              </motion.div>
             ) : (
-              <>
-                <Upload className="w-6 h-6 text-slate-300 group-hover:text-indigo-500 transition-colors" />
-                <span className="text-xs font-bold text-slate-400 group-hover:text-slate-600">Upload Receipt</span>
-              </>
+              /* Upload prompt */
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full flex items-center gap-3 px-4 py-3 bg-slate-50 border border-dashed border-slate-200 rounded-xl hover:border-indigo-300 hover:bg-indigo-50/30 transition-all group"
+              >
+                <div className="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-indigo-100 flex items-center justify-center transition-colors">
+                  <Upload className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 transition-colors" />
+                </div>
+                <div className="text-left">
+                  <p className="text-xs font-bold text-slate-600 group-hover:text-indigo-700">Upload Receipt or PDF</p>
+                  <p className="text-[10px] text-slate-400">AI will auto-detect amount, merchant & date</p>
+                </div>
+              </button>
             )}
           </div>
 
-          <button 
-            type="submit"
-            className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-bold shadow-xl shadow-indigo-100 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3"
-          >
-            <span>Done</span>
-          </button>
-
-          {fileName && !isScanning && (
-            <motion.button 
-              initial={{ opacity: 0, scale: 0.9 }}
+          {/* Action buttons */}
+          {isSmartFilled ? (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              type="button"
-              onClick={handleSubmit}
-              className="w-full py-4 bg-emerald-50 text-emerald-600 rounded-2xl font-bold border border-emerald-100 hover:bg-emerald-100 transition-all flex items-center justify-center gap-2"
+              type="submit"
+              className="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-100 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
             >
               <Sparkles className="w-4 h-4" />
-              <span>Quick Add Scanned Details</span>
+              <span>Review & Add Expense</span>
             </motion.button>
+          ) : (
+            <button 
+              type="submit"
+              className="w-full py-3.5 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-100 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+            >
+              <span>Add Expense</span>
+            </button>
           )}
         </form>
       </motion.div>
-
-      <div className="mt-6 sm:mt-8 p-4 sm:p-6 bg-indigo-50 rounded-2xl sm:rounded-3xl flex items-start sm:items-center gap-3 sm:gap-4">
-        <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 flex-shrink-0 mt-0.5 sm:mt-0" />
-        <p className="text-xs sm:text-sm text-indigo-700 font-medium">
-          Want to save time? Use the <span className="font-bold underline cursor-pointer">Smart Upload</span> feature to scan receipts automatically.
-        </p>
-      </div>
     </div>
   );
 };

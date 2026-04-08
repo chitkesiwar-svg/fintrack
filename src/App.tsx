@@ -180,6 +180,7 @@ export default function App() {
             setIncomeSources={setIncomeSources}
             onViewTransactions={() => setActiveTab('transactions')}
             user={user}
+            onUpdateUser={(updated) => setUser(updated)}
             family={family}
             setFamily={setFamily}
           />

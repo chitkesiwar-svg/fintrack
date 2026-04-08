@@ -166,14 +166,24 @@ app.post('/api/settings', (req: any, res) => {
 // Receipt Scanning via Gemini API (server-side to keep API key secure)
 app.post('/api/scan-receipt', async (req, res) => {
   try {
-    const { imageData, mimeType, categories } = req.body;
-    if (!imageData || !mimeType) {
-      return res.status(400).json({ error: 'Missing imageData or mimeType' });
+    const { imageData, mimeType: rawMimeType, categories } = req.body;
+    if (!imageData) {
+      return res.status(400).json({ error: 'Missing imageData' });
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       return res.status(500).json({ error: 'GEMINI_API_KEY not configured on the server' });
+    }
+
+    // Auto-detect mime type: if it's empty or generic, try to detect from base64 header
+    let mimeType = rawMimeType || 'application/pdf';
+    if (!mimeType || mimeType === 'application/octet-stream') {
+      // Check base64 magic bytes
+      if (imageData.startsWith('JVBERi')) mimeType = 'application/pdf';
+      else if (imageData.startsWith('/9j/')) mimeType = 'image/jpeg';
+      else if (imageData.startsWith('iVBOR')) mimeType = 'image/png';
+      else mimeType = 'application/pdf';
     }
 
     const ai = new GoogleGenAI({ apiKey });
@@ -189,7 +199,13 @@ app.post('/api/scan-receipt', async (req, res) => {
               },
             },
             {
-              text: `Extract the merchant name, total amount (as a number), date (in YYYY-MM-DD format), and the most appropriate category from this receipt. Categories available: ${(categories || []).join(', ')}`,
+              text: `You are an expert receipt and invoice parser. Analyze this document (it may be a scanned receipt image or a PDF invoice) and extract:
+1. merchant: The business/store name
+2. amount: The total amount as a number (no currency symbol)
+3. date: The transaction date in YYYY-MM-DD format
+4. category: Best matching category from: ${(categories || ['Food', 'Shopping', 'Travel', 'Utilities', 'Entertainment', 'Other']).join(', ')}
+
+If you cannot find a field, make your best guess from context. Always return all 4 fields.`,
             },
           ],
         },
@@ -210,10 +226,11 @@ app.post('/api/scan-receipt', async (req, res) => {
     });
 
     const result = JSON.parse(response.text || '{}');
+    console.log('Scan result:', result);
     res.json(result);
   } catch (error: any) {
     console.error('Error scanning receipt:', error?.message || error);
-    res.status(500).json({ error: 'Failed to scan receipt' });
+    res.status(500).json({ error: error?.message || 'Failed to scan receipt' });
   }
 });
 

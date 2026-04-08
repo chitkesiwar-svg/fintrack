@@ -5,7 +5,7 @@ import {
   Edit2, Check, X, Sliders,
   Utensils, ShoppingBag, Film, Car, 
   Activity, Zap, CreditCard, TrendingUp, 
-  BookOpen, MoreHorizontal, Calendar, User, Mail, Phone
+  BookOpen, MoreHorizontal, Calendar, User, Mail, Phone, Camera
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { DUMMY_TRANSACTIONS, DUMMY_SUBSCRIPTIONS, DUMMY_EMIS } from '../constants';
@@ -20,6 +20,7 @@ interface DashboardProps {
   setIncomeSources: React.Dispatch<React.SetStateAction<IncomeSource[]>>;
   onViewTransactions: () => void;
   user?: any;
+  onUpdateUser?: (user: any) => void;
   family: FamilyMember[];
   setFamily: React.Dispatch<React.SetStateAction<FamilyMember[]>>;
 }
@@ -194,6 +195,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   setIncomeSources,
   onViewTransactions,
   user,
+  onUpdateUser,
   family,
   setFamily
 }) => {
@@ -464,11 +466,42 @@ export const Dashboard: React.FC<DashboardProps> = ({
       {/* Profile Card */}
       {user && (
         <div className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-sm flex flex-col sm:flex-row items-center gap-3 sm:gap-5 text-center sm:text-left">
-          <img 
-            src={user.avatar || 'https://ui-avatars.com/api/?name=User&background=random&color=fff'}
-            alt={user.name}
-            className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 border-indigo-100 shadow-sm"
-          />
+          <div className="relative group">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 border-indigo-100 shadow-sm overflow-hidden bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
+              {user.avatar && !user.avatar.includes('ui-avatars.com') ? (
+                <img 
+                  src={user.avatar}
+                  alt={user.name}
+                  className="w-full h-full object-cover"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden'); }}
+                />
+              ) : null}
+              <span className={cn(
+                "text-white font-bold text-lg sm:text-xl select-none",
+                user.avatar && !user.avatar.includes('ui-avatars.com') ? "hidden" : ""
+              )}>
+                {(user.name || 'U').charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <label className="absolute inset-0 rounded-full cursor-pointer flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-all">
+              <input 
+                type="file" 
+                accept="image/*" 
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file && onUpdateUser) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                      onUpdateUser({ ...user, avatar: reader.result as string });
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+              />
+              <Camera className="w-4 h-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+            </label>
+          </div>
           <div className="flex-1 min-w-0">
             <h2 className="text-lg sm:text-xl font-bold text-slate-800 truncate">{user.name || 'User'}</h2>
             <p className="text-xs sm:text-sm text-slate-400 truncate">{user.email || ''}</p>
