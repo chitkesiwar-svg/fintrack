@@ -7,6 +7,7 @@ import { Analytics } from './views/Analytics';
 import { SavingsGoals } from './views/SavingsGoals';
 import { Invoices } from './views/Invoices';
 import { Settings } from './views/Settings';
+import { Profile } from './views/Profile';
 import { Accounts } from './views/Accounts';
 import { Transactions } from './views/Transactions';
 import { LandingPage } from './views/LandingPage';
@@ -180,7 +181,6 @@ export default function App() {
             setIncomeSources={setIncomeSources}
             onViewTransactions={() => setActiveTab('transactions')}
             user={user}
-            onUpdateUser={(updated) => setUser(updated)}
             family={family}
             setFamily={setFamily}
           />
@@ -201,6 +201,8 @@ export default function App() {
         return <Invoices />;
       case 'settings':
         return <Settings />;
+      case 'profile':
+        return <Profile user={user} incomeSources={incomeSources} family={family} onBack={() => setActiveTab('home')} />;
       default:
         return (
           <div className="flex flex-col items-center justify-center h-[60vh] text-slate-400">
@@ -225,7 +227,7 @@ export default function App() {
       />
 
       <main className="flex-1 flex flex-col overflow-hidden w-full relative">
-        <Header activeTab={activeTab} onMenuClick={() => setIsMobileMenuOpen(true)} user={user} />
+        <Header activeTab={activeTab} onMenuClick={() => setIsMobileMenuOpen(true)} user={user} onProfileClick={() => setActiveTab('profile')} />
 
         <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
           <AnimatePresence mode="wait">

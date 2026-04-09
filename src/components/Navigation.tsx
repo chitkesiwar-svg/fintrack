@@ -103,7 +103,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMob
   );
 };
 
-export const Header: React.FC<{ activeTab: string, onMenuClick?: () => void, user?: any }> = ({ activeTab, onMenuClick, user }) => {
+export const Header: React.FC<{ activeTab: string, onMenuClick?: () => void, user?: any, onProfileClick?: () => void }> = ({ activeTab, onMenuClick, user, onProfileClick }) => {
   return (
     <header className="h-full max-h-20 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center justify-between px-4 md:px-8 py-4 sticky top-0 z-30">
       <div className="flex items-center gap-3">
@@ -121,7 +121,7 @@ export const Header: React.FC<{ activeTab: string, onMenuClick?: () => void, use
             {activeTab === 'budget-categories' ? 'Budget' : activeTab.replace('-', ' ')}
           </h1>
           {activeTab === 'home' && (
-            <p className="text-xs text-slate-400 hidden sm:block">Hi {user?.name || 'User'} 👋 Here’s your financial summary</p>
+            <p className="text-xs text-slate-400 hidden sm:block">Hi {user?.name || 'User'} 👋 Here's your financial summary</p>
           )}
         </div>
       </div>
@@ -142,7 +142,10 @@ export const Header: React.FC<{ activeTab: string, onMenuClick?: () => void, use
             <span className="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
           </button>
 
-          <div className="flex items-center gap-3 pl-2 md:pl-4 border-l border-slate-100">
+          <button
+            onClick={onProfileClick}
+            className="flex items-center gap-3 pl-2 md:pl-4 border-l border-slate-100 hover:opacity-80 transition-opacity cursor-pointer"
+          >
             <div className="text-right hidden sm:block">
               <p className="text-sm font-semibold text-slate-800 leading-none">{user?.name || 'User'}</p>
               <p className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mt-1">{user?.role || 'Member'}</p>
@@ -152,7 +155,7 @@ export const Header: React.FC<{ activeTab: string, onMenuClick?: () => void, use
               alt="Profile" 
               className="w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-indigo-100 p-0.5"
             />
-          </div>
+          </button>
         </div>
       </div>
     </header>

@@ -166,24 +166,14 @@ app.post('/api/settings', (req: any, res) => {
 // Receipt Scanning via Gemini API (server-side to keep API key secure)
 app.post('/api/scan-receipt', async (req, res) => {
   try {
-    const { imageData, mimeType: rawMimeType, categories } = req.body;
-    if (!imageData) {
-      return res.status(400).json({ error: 'Missing imageData' });
+    const { imageData, mimeType, categories } = req.body;
+    if (!imageData || !mimeType) {
+      return res.status(400).json({ error: 'Missing imageData or mimeType' });
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       return res.status(500).json({ error: 'GEMINI_API_KEY not configured on the server' });
-    }
-
-    // Auto-detect mime type: if it's empty or generic, try to detect from base64 header
-    let mimeType = rawMimeType || 'application/pdf';
-    if (!mimeType || mimeType === 'application/octet-stream') {
-      // Check base64 magic bytes
-      if (imageData.startsWith('JVBERi')) mimeType = 'application/pdf';
-      else if (imageData.startsWith('/9j/')) mimeType = 'image/jpeg';
-      else if (imageData.startsWith('iVBOR')) mimeType = 'image/png';
-      else mimeType = 'application/pdf';
     }
 
     const ai = new GoogleGenAI({ apiKey });
@@ -199,13 +189,17 @@ app.post('/api/scan-receipt', async (req, res) => {
               },
             },
             {
-              text: `You are an expert receipt and invoice parser. Analyze this document (it may be a scanned receipt image or a PDF invoice) and extract:
-1. merchant: The business/store name
-2. amount: The total amount as a number (no currency symbol)
-3. date: The transaction date in YYYY-MM-DD format
-4. category: Best matching category from: ${(categories || ['Food', 'Shopping', 'Travel', 'Utilities', 'Entertainment', 'Other']).join(', ')}
+              text: `You are a financial document analyzer. This is a receipt, invoice, bill, or financial document (could be an image or a PDF).
 
-If you cannot find a field, make your best guess from context. Always return all 4 fields.`,
+Carefully extract the following information:
+1. **merchant**: The store/company name (e.g. "Amazon", "Starbucks", "Arihant Book Store")
+2. **amount**: The total/grand total/amount due as a NUMBER (e.g. 450.00). Look for "Total", "Grand Total", "Amount Due", "Net Amount", or the final amount on the receipt. Do NOT return 0 unless the document genuinely shows a zero amount.
+3. **date**: The transaction date in YYYY-MM-DD format. If no date is found, use today's date.
+4. **category**: The most fitting category from this list: ${(categories || ['Food', 'Shopping', 'Travel', 'Utilities', 'Entertainment', 'Health', 'Education', 'Other']).join(', ')}
+
+If this is a bookstore receipt, categorize as "Education". If food/restaurant, use "Food". Analyze every line item to find the total.
+
+Return ONLY valid JSON with these four fields.`,
             },
           ],
         },
@@ -225,12 +219,12 @@ If you cannot find a field, make your best guess from context. Always return all
       },
     });
 
+    console.log('Gemini raw response:', response.text);
     const result = JSON.parse(response.text || '{}');
-    console.log('Scan result:', result);
     res.json(result);
   } catch (error: any) {
     console.error('Error scanning receipt:', error?.message || error);
-    res.status(500).json({ error: error?.message || 'Failed to scan receipt' });
+    res.status(500).json({ error: 'Failed to scan receipt: ' + (error?.message || 'Unknown error') });
   }
 });
 
